@@ -1,0 +1,20 @@
+name: wsman
+version: 0.1.0
+
+authors:
+  - your-name-here <your-email-here>
+
+targets:
+  wsman:
+    main: src/cli.cr
+
+crystal: 0.27.2
+
+dependencies:
+  clim:
+    github: at-grandpa/clim
+    version: 0.5.0
+  crinja:
+    github: straight-shoota/crinja
+
+license: MIT

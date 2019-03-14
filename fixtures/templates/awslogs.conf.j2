@@ -1,0 +1,9 @@
+[{{ site_name }}/access.log]
+log_group_name = {{ awslogs_prefix }}/{{ site_name }}/access.log
+log_stream_name = {instance_id}
+file = {{ web_root_dir }}/{{ site_name }}/log/access.log
+
+[{{ site_name }}/error.log]
+log_group_name = {{ awslogs_prefix }}/{{ site_name }}/error.log
+log_stream_name = {instance_id}
+file = {{ web_root_dir }}/{{ site_name }}/log/error.log
