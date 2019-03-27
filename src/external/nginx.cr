@@ -22,7 +22,7 @@ module Wsman
 
       def site_config_path(site_name)
         sites_config_path = File.join(@config.nginx_conf_dir, "conf.d")
-        File.join(sites_config_path, "#{site_name}.conf")
+        File.join(sites_config_path, "wsman-#{site_name}.conf")
       end
 
       def include_path

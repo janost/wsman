@@ -24,22 +24,11 @@ module Wsman
 
       private def mysql_admin_pass
         cmd = @config.mysql_pwd_cmd
-        status, output = run_cmd(cmd)
+        status, output = Wsman::Util.cmd(cmd)
         if (status == 0)
           output
         else
           raise "Failed to get mysql pass from #{@config.mysql_pwd_cmd}..."
-        end
-      end
-      
-      private def run_cmd(cmd, args = [] of String)
-        stdout = IO::Memory.new
-        stderr = IO::Memory.new
-        status = Process.run(cmd, args: args, output: stdout, error: stderr)
-        if status.success?
-          {status.exit_code, stdout.to_s.strip}
-        else
-          {status.exit_code, stderr.to_s.strip}
         end
       end
     end
