@@ -16,5 +16,7 @@ dependencies:
     version: 0.5.0
   crinja:
     github: straight-shoota/crinja
+  sqlite3:
+    github: crystal-lang/crystal-sqlite3
 
 license: MIT

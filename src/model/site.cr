@@ -112,7 +112,7 @@ module Wsman
           "container_htdocs" => @config.container_htdocs,
           "container_network" => @config.container_network,
           "site_name" => site_name,
-          "container_ip" => "#{@config.container_subnet}#{@config.container_ip(@site_name)}",
+          "container_ip" => "#{@config.container_ip(@site_name)}",
           "phpfpm_port" => @config.phpfpm_port,
           "gen_time" => Time.now,
           "wsman_version" => @config.wsman_version,

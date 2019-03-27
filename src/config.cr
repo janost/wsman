@@ -1,4 +1,5 @@
 require "yaml"
+require "sqlite3"
 
 module Wsman
   class Config
@@ -26,11 +27,6 @@ module Wsman
       container_htdocs: {
         type:    String,
         default: "/htdocs",
-      },
-      site_config: {
-        type:    Hash(String, Hash(String, String | Int32 | Nil)),
-        default: Hash(String, Hash(String, String | Int32 | Nil)).new,
-        #default: {} of String => {} of String => String | Int32 | Nil,
       },
       container_subnet: {
         type:    String,
@@ -90,9 +86,8 @@ module Wsman
       @nginx_conf_dir = "/etc/nginx"
       @fixtures_dir = File.join(config_base, "fixtures")
       @web_root_dir = "/srv/www"
-      @site_config = Hash(String, Hash(String, String | Int32 | Nil)).new
-      # Currently we're limited to a /24 subnet
-      @container_subnet = "172.28.200."
+      # Currently we're limited to a /16 subnet
+      @container_subnet = "172.28."
       @container_network = "web"
       @container_image = "webdevops/php:alpine-php7"
       @container_htdocs = "/htdocs"
@@ -112,7 +107,6 @@ module Wsman
   end
 
   class ConfigManager
-    FIRST_CONTAINER_IP = 10
     getter wsman_version
 
     def initialize
@@ -126,8 +120,12 @@ module Wsman
         @config = Config.new(config_base)
         save
       end
+      @db_path = File.join(config_dir, "config.db")
+      unless File.exists?(@db_path)
+        init_db
+      end
       @wsman_version = "0.1"
-    end
+    end    
 
     def nginx_conf_dir
       @config.nginx_conf_dir
@@ -144,44 +142,60 @@ module Wsman
     end
 
     def container_ip(site_name)
-      unless @config.site_config.has_key?(site_name)
-        @config.site_config[site_name] = Hash(String, String | Int32 | Nil).new
+      ip_id = nil
+      ip = nil
+      DB.open "sqlite3://#{@db_path}" do |db|
+        db.query "SELECT ip_id FROM sites WHERE name = ?", site_name do |rs|
+          rs.each do
+            ip_id = rs.read(Int32)
+          end
+        end
+        if ip_id.nil?
+          db.query "SELECT rowid, ip FROM ips WHERE rowid NOT IN (SELECT ip_id FROM sites) ORDER BY rowid LIMIT 1" do |rs|
+            rs.each do
+              ip_id = rs.read(Int32)
+              ip = rs.read(String)
+            end
+          end
+          db.exec "INSERT OR IGNORE INTO sites (name) VALUES (?)", site_name
+          db.exec "UPDATE sites SET ip_id = ? WHERE name = ?", ip_id, site_name
+        else
+          db.query "SELECT ip FROM ips WHERE rowid = ?", ip_id do |rs|
+            rs.each do
+              ip = rs.read(String)
+            end
+          end
+        end
       end
-      unless @config.site_config[site_name]["container_ip"]?
-        @config.site_config[site_name]["container_ip"] = next_container_ip
-        save
-      end
-      @config.site_config[site_name]["container_ip"]
+      ip
     end
 
     def has_db_config?(site_name)
-      unless @config.site_config.has_key?(site_name)
-        @config.site_config[site_name] = Hash(String, String | Int32 | Nil).new
-      end
-      @config.site_config[site_name]["db_name"]? || 
-        @config.site_config[site_name]["db_username"]? || 
-        @config.site_config[site_name]["db_password"]?
+      db_name, db_username, db_password = get_db_config(site_name)
+      db_name || db_username || db_password
     end
 
     def set_db_config(site_name, db_name, db_username, db_password)
-      unless @config.site_config.has_key?(site_name)
-        @config.site_config[site_name] = Hash(String, String | Int32 | Nil).new
+      DB.open "sqlite3://#{@db_path}" do |db|
+        db.exec "INSERT OR IGNORE INTO sites (name) VALUES (?)", site_name
+        db.exec "UPDATE sites SET db_name = ?, db_username = ?, db_password = ? WHERE name = ?", db_name, db_username, db_password, site_name
       end
-      @config.site_config[site_name]["db_name"] = db_name
-      @config.site_config[site_name]["db_username"] = db_username
-      @config.site_config[site_name]["db_password"] = db_password
-      save
     end
 
     def get_db_config(site_name)
-      unless @config.site_config.has_key?(site_name)
-        @config.site_config[site_name] = Hash(String, String | Int32 | Nil).new
+      db_name = nil
+      db_username = nil
+      db_password = nil
+      DB.open "sqlite3://#{@db_path}" do |db|
+        db.query "SELECT db_name, db_username, db_password FROM sites WHERE name = ?", site_name do |rs|
+          rs.each do
+            db_name = rs.read(String)
+            db_username = rs.read(String)
+            db_password = rs.read(String)
+          end
+        end
       end
-      {
-        @config.site_config[site_name]["db_name"]?,
-        @config.site_config[site_name]["db_username"]?,
-        @config.site_config[site_name]["db_password"]?
-      }
+      { db_name, db_username, db_password }
     end
 
     def container_subnet
@@ -259,19 +273,19 @@ module Wsman
       File.write(@config_path, @config.to_yaml)
       File.chmod(@config_path, 0o600)
     end
-    
-    private def next_container_ip
-      ips = Array(Int32).new
-      @config.site_config.each do |k, v|
-        if v["container_ip"]? != nil
-          ips << v["container_ip"].as(Int32)
+
+    private def init_db
+      DB.open "sqlite3://#{@db_path}" do |db|
+        db.exec "create table sites (name text PRIMARY KEY, ip_id integer, db_name text, db_username text, db_password text)"
+        db.exec "create table ips (ip text)"
+
+        insert_ips = Array(String).new
+        (1..254).each do |x|
+          (1..254).each do |y|
+            insert_ips << "(\"#{container_subnet}#{x}.#{y}\")"
+          end
         end
-      end
-      if ips.size == 0
-        FIRST_CONTAINER_IP
-      else
-        ips.sort!
-        ips.last + 1
+        db.exec "insert into ips (ip) values #{insert_ips.join(",")}"
       end
     end
   end
