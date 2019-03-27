@@ -46,7 +46,7 @@ module Wsman
       else
         @log.warn("  Couldn't find valid certificate and key. Please make sure exactly one `.crt` and exactly one `.key` file exists in the `cert` subdirectory for the site. This site WILL NOT USE TLS!")
       end
-      if site.needs_php?
+      if site.needs_dcompose?
         restart_service = site.dcompose_changed?
         if restart_service
           @log.info("  Docker-compose file needs updating.")

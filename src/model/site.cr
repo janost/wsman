@@ -14,15 +14,11 @@ module Wsman
       end
 
       def render_nginx
-        template = if has_valid_cert?
-                     crinja_template("nginx-site.conf.j2")
-                   else
-                     crinja_template("nginx-site-notls.conf.j2")
-                   end
+        template = crinja_template("nginx-site.conf.j2")
         template.render(template_values)
       end
 
-      def needs_php?
+      def needs_dcompose?
         site_type_file = File.join(subdir("wsconfig"), "site-type")
         if File.exists?(site_type_file)
           site_type = File.read(site_type_file).strip
@@ -126,7 +122,8 @@ module Wsman
           "db_name" => db_name,
           "db_username" => db_username,
           "db_password" => db_password,
-          "needs_php" => needs_php?
+          "needs_dcompose" => needs_dcompose?,
+          "tls_enabled" => has_valid_cert?
         }
       end
     end
