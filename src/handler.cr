@@ -29,7 +29,7 @@ module Wsman
       @log.info("Deploying nginx includes...")
       @nginx.deploy_includes
     end
-    
+
     def post_process
       @log.info("Reloading nginx...")
       @systemd.nginx_reload

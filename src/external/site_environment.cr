@@ -18,4 +18,3 @@ module Wsman
     end
   end
 end
-  

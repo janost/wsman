@@ -125,7 +125,7 @@ module Wsman
         init_db
       end
       @wsman_version = "0.1"
-    end    
+    end
 
     def nginx_conf_dir
       @config.nginx_conf_dir

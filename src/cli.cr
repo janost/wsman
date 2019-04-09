@@ -8,13 +8,13 @@ module Wsman
       desc "Wsman - manage sites hosted with nginx and php-fpm."
       usage "hello [options] [arguments] ..."
       version "Version 0.1.0"
-      run do |opts, args|
+      run do |opts, _args|
         puts opts.help_string
       end
       sub "setup_all" do
         desc "Generate site configurations."
         usage "setup_all"
-        run do |opts, args|
+        run do |_opts, _args|
           log = Logger.new(STDOUT)
           handler = Wsman::Handler.new
           handler.prepare_env
@@ -30,10 +30,11 @@ module Wsman
           handler.post_process
         end
       end
+
       sub "setup" do
-        desc "Generate site configurations."
+        desc "Generate site configurations for the given site."
         usage "setup [options] <sitename>"
-        run do |opts, args|
+        run do |_opts, args|
           log = Logger.new(STDOUT)
           if args.size == 0
             log.info("Please list sites to process.")

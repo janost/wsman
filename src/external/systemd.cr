@@ -7,47 +7,47 @@ module Wsman
       end
 
       def nginx_restart
-        status, output = Wsman::Util.cmd("/bin/systemctl", ["restart", "nginx"])
+        status, _ = Wsman::Util.cmd("/bin/systemctl", ["restart", "nginx"])
         status == 0
       end
 
       def nginx_reload
-        status, output = Wsman::Util.cmd("/bin/systemctl", ["reload", "nginx"])
+        status, _ = Wsman::Util.cmd("/bin/systemctl", ["reload", "nginx"])
         status == 0
       end
 
       def awslogs_restart
-        status, output = Wsman::Util.cmd("/bin/systemctl", ["restart", "awslogs"])
+        status, _ = Wsman::Util.cmd("/bin/systemctl", ["restart", "awslogs"])
         status == 0
       end
 
       def site_running?(site_name)
-        status, output = Wsman::Util.cmd("/bin/systemctl", ["status", "#{@config.template_service_name}@#{site_name}"])
+        status, _ = Wsman::Util.cmd("/bin/systemctl", ["status", "#{@config.template_service_name}@#{site_name}"])
         status == 0
       end
 
       def site_enable(site_name)
-        status, output = Wsman::Util.cmd("/bin/systemctl", ["enable", "#{@config.template_service_name}@#{site_name}"])
+        status, _ = Wsman::Util.cmd("/bin/systemctl", ["enable", "#{@config.template_service_name}@#{site_name}"])
         status == 0
       end
 
       def site_disable(site_name)
-        status, output = Wsman::Util.cmd("/bin/systemctl", ["disable", "#{@config.template_service_name}@#{site_name}"])
+        status, _ = Wsman::Util.cmd("/bin/systemctl", ["disable", "#{@config.template_service_name}@#{site_name}"])
         status == 0
       end
 
       def site_start(site_name)
-        status, output = Wsman::Util.cmd("/bin/systemctl", ["start", "#{@config.template_service_name}@#{site_name}"])
+        status, _ = Wsman::Util.cmd("/bin/systemctl", ["start", "#{@config.template_service_name}@#{site_name}"])
         status == 0
       end
 
       def site_stop(site_name)
-        status, output = Wsman::Util.cmd("/bin/systemctl", ["stop", "#{@config.template_service_name}@#{site_name}"])
+        status, _ = Wsman::Util.cmd("/bin/systemctl", ["stop", "#{@config.template_service_name}@#{site_name}"])
         status == 0
       end
 
       def site_restart(site_name)
-        status, output = Wsman::Util.cmd("/bin/systemctl", ["restart", "#{@config.template_service_name}@#{site_name}"])
+        status, _ = Wsman::Util.cmd("/bin/systemctl", ["restart", "#{@config.template_service_name}@#{site_name}"])
         status == 0
       end
 
@@ -56,7 +56,7 @@ module Wsman
       end
 
       def daemon_reload
-        status, output = Wsman::Util.cmd("/bin/systemctl", ["daemon-reload"])
+        status, _ = Wsman::Util.cmd("/bin/systemctl", ["daemon-reload"])
         status == 0
       end
     end

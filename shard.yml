@@ -19,4 +19,9 @@ dependencies:
   sqlite3:
     github: crystal-lang/crystal-sqlite3
 
+development_dependencies:
+  ameba:
+    github: veelenga/ameba
+    version: ~> 0.9.1
+
 license: MIT
