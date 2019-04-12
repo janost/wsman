@@ -1,16 +1,27 @@
 require "../config"
 require "../error/site_validation_exception"
+require "./site_config"
 
 require "crinja"
+require "yaml"
 
 module Wsman
   module Model
     class Site
       getter site_name
 
+      DIR_TEMPLATES = "ws-template"
+      DIR_CONFIG = "ws-config"
+      SITECONF_FILE = "site.yml"
+
       def initialize(@config : Wsman::ConfigManager, @site_name : String)
         @site_root = File.join(@config.web_root_dir, site_name)
         prepare_dirs
+        if File.exists?(File.join(subdir(DIR_CONFIG), SITECONF_FILE))
+          @siteconf = SiteConfig.from_yaml(File.read(File.join(subdir(DIR_CONFIG), SITECONF_FILE)))
+        else
+          @siteconf = nil
+        end
       end
 
       def render_nginx
@@ -19,13 +30,7 @@ module Wsman
       end
 
       def needs_dcompose?
-        site_type_file = File.join(subdir("wsconfig"), "site-type")
-        if File.exists?(site_type_file)
-          site_type = File.read(site_type_file).strip
-          site_type != "static"
-        else
-          true
-        end
+        @siteconf.try &.site_type != "static"
       end
 
       def render_dcompose
@@ -62,11 +67,11 @@ module Wsman
       end
 
       private def prepare_dirs
-        subdir("wsconfig")
         subdir("htdocs")
         subdir("cert")
         subdir("log")
-        subdir("templates")
+        subdir(DIR_TEMPLATES)
+        subdir(DIR_CONFIG)
       end
 
       private def subdir(dir : String)
@@ -77,10 +82,10 @@ module Wsman
 
       private def crinja_template(template_name)
         env = Crinja.new
-        if File.exists?(File.join(subdir("templates"), template_name))
-          env.loader = Crinja::Loader::FileSystemLoader.new(subdir("templates"))
+        if File.exists?(File.join(subdir(DIR_TEMPLATES), template_name))
+          env.loader = Crinja::Loader::FileSystemLoader.new(subdir(DIR_TEMPLATES))
         else
-          env.loader = Crinja::Loader::FileSystemLoader.new(File.join(@config.fixtures_dir, "templates"))
+          env.loader = Crinja::Loader::FileSystemLoader.new(File.join(@config.fixtures_dir, DIR_TEMPLATES))
         end
         env.get_template(template_name)
       end
