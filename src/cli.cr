@@ -66,9 +66,28 @@ module Wsman
         end
         sub "zipinstall" do
           desc "Installs a zipped site artifact to the webroot."
-          usage "zipinstall [options] <sitename>"
-          run do |_opts, args|
-            puts "poop"
+          usage "zipinstall --site <sitename> --zip <zip-path>"
+          option "-f", "--force", type: Bool, desc: "Overwrite target directory.", default: false
+          option "-s SITE", "--site=SITE", type: String, required: true, desc: "Main hostname of the site. This is also used as the directory name."
+          option "-z ZIP", "--zip ZIP", type: String, required: true, desc: "Path to the archive."
+          run do |opts, args|
+            log = Logger.new(STDOUT)
+            handler = Wsman::Handler.new
+            unless File.exists?(opts.zip)
+              log.error("Provided archive #{opts.zip} doesn't exist, aborting.")
+              exit 1
+            end
+            if handler.site_manager.site_exists?(opts.site)
+              if opts.force
+                log.info("Site #{opts.site} already exists, forcing install on user request...")
+              else
+                log.error("Site #{opts.site} already exists, aborting.")
+                exit 1
+              end
+            else
+              log.info("Site #{opts.site} doesn't exist yet, moving on...")
+            end
+            log.info("Installing artifact #{opts.zip} as #{opts.site}...")
           end
         end
       end

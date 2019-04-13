@@ -10,6 +10,10 @@ module Wsman
       Dir.children(@config.web_root_dir).reject { |x| !Dir.exists?(x) }
     end
 
+    def site_exists?(site_name)
+      Dir.exists?(File.join(@config.web_root_dir, site_name))
+    end
+
     def sites
       @sites.clear
       names.each do |site_name|
