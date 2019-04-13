@@ -327,6 +327,15 @@ module Wsman
       File.chmod(@config_path, 0o600)
     end
 
+    def env_changed?(site_name, new_env)
+      if File.exists?(env_file(site_name))
+        current_env = File.read(env_file(site_name))
+        new_env != current_env
+      else
+        true
+      end
+    end
+
     def deploy_env(site_name, env)
       File.write(env_file(site_name), env)
       File.chmod(env_file(site_name), 0o600)

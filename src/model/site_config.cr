@@ -43,6 +43,14 @@ module Wsman
         @databases = DEFAULT_DATABASES
         @hosts = DEFAULT_HOSTS
       end
+
+      def full_hosts(base_domain)
+        result = Hash(String, String).new
+        @hosts.each do |host|
+          result[host.upcase] = "#{host}.#{base_domain}"
+        end
+        result
+      end
     end
   end
 end

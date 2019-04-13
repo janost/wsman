@@ -140,7 +140,8 @@ module Wsman
           "needs_dcompose" => needs_dcompose?,
           "tls_enabled" => has_valid_cert?,
           "env_files" => env_files,
-          "php_version" => @siteconf.php_version
+          "php_version" => @siteconf.php_version,
+          "extra_hosts" => @siteconf.full_hosts(@site_name)
         }
       end
     end

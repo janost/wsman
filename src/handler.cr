@@ -68,10 +68,13 @@ module Wsman
             else
               @log.error("    Error saving configuration for #{db}!")
             end
-            @log.info("  Writing site environment to #{site.env_file}...")
-            @config.deploy_env(site_name, site.render_site_env)
-            restart_service = true
           end
+        end
+        new_env = site.render_site_env
+        if @config.env_changed?(site_name, new_env)
+          @log.info("  Writing site environment to #{site.env_file}...")
+          @config.deploy_env(site_name, new_env)
+          restart_service = true
         end
         @log.info("  Enabling systemd service for the site runtime container...")
         if @systemd.site_enable(site_name)
