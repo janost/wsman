@@ -7,7 +7,7 @@ module Wsman
     end
 
     def names
-      Dir.children(@config.web_root_dir).reject { |x| !Dir.exists?(x) }
+      Dir.children(@config.web_root_dir)
     end
 
     def site_exists?(site_name)

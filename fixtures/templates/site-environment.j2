@@ -1,6 +1,6 @@
-DB_USERNAME={{ db_username }}
-DB_PASSWORD={{ db_password }}
-DB_NAME={{ db_name }}
+{% for db in databases %}WS_DB_{{ db.confname }}_NAME={{ db.dbname }}
+WS_DB_{{ db.confname }}_USER={{ db.username }}
+WS_DB_{{ db.confname }}_PASS={{ db.password }}
+{% endfor %}
 SMTP_USERNAME=
 SMTP_PASSWORD=
-

@@ -1,6 +1,8 @@
 require "yaml"
 require "sqlite3"
 
+require "./model/db_config"
+
 module Wsman
   class Config
     YAML.mapping(
@@ -76,6 +78,10 @@ module Wsman
         type:    String,
         default: "wsd-",
       },
+      hosting_env_file: {
+        type:    String,
+        default: "/etc/wsman-sites/hosting-env",
+      },
       stack_name_cmd: {
         type:    String,
         default: "/opt/stack-name.sh",
@@ -102,6 +108,7 @@ module Wsman
       @systemd_service_dir = "/etc/systemd/system"
       @docker_environment_dir = "/etc/wsman-sites"
       @docker_environment_prefix = "wsd-"
+      @hosting_env_file = "/etc/wsman-sites/hosting-env"
       @stack_name_cmd = "/opt/stack-name.sh"
     end
   end
@@ -170,32 +177,55 @@ module Wsman
       ip
     end
 
-    def has_db_config?(site_name)
-      db_name, db_username, db_password = get_db_config(site_name)
-      db_name || db_username || db_password
+    def has_db?(site_name, confname)
+      confname = confname.upcase
+      databases = get_db_config(site_name)
+      db_confnames = databases.map { |x| x.confname }
+      db_confnames.includes? confname
     end
 
-    def set_db_config(site_name, db_name, db_username, db_password)
+    def add_db_config(site_name, confname, dbname, username, password)
+      confname = confname.upcase
+      return false if has_db?(site_name, confname)
+
       DB.open "sqlite3://#{@db_path}" do |db|
         db.exec "INSERT OR IGNORE INTO sites (name) VALUES (?)", site_name
-        db.exec "UPDATE sites SET db_name = ?, db_username = ?, db_password = ? WHERE name = ?", db_name, db_username, db_password, site_name
+        site_id = db_site_id(db, site_name)
+
+        db.exec "INSERT OR IGNORE INTO dbs (site_id, confname, dbname, username, password) "\
+                "VALUES (?, ?, ?, ?, ?)",
+                site_id, confname, dbname, username, password
       end
+      true
     end
 
     def get_db_config(site_name)
-      db_name = nil
-      db_username = nil
-      db_password = nil
+      databases = Array(Wsman::Model::DbConfig).new
       DB.open "sqlite3://#{@db_path}" do |db|
-        db.query "SELECT db_name, db_username, db_password FROM sites WHERE name = ?", site_name do |rs|
+        site_id = db_site_id(db, site_name)
+        return databases unless site_id
+        
+        db.query "SELECT confname, dbname, username, password FROM dbs WHERE site_id = ?", site_id do |rs|
           rs.each do
-            db_name = rs.read(String)
-            db_username = rs.read(String)
-            db_password = rs.read(String)
+            confname = rs.read(String)
+            dbname = rs.read(String)
+            username = rs.read(String)
+            password = rs.read(String)
+            databases << Wsman::Model::DbConfig.new(confname, dbname, username, password)
           end
         end
       end
-      { db_name, db_username, db_password }
+      databases
+    end
+
+    def db_site_id(db, site_name)
+      site_id = nil
+      db.query "SELECT rowid FROM sites WHERE name = ?", site_name do |rs|
+        rs.each do
+          site_id = rs.read(Int32)
+        end
+      end
+      site_id
     end
 
     def container_subnet
@@ -269,15 +299,39 @@ module Wsman
       @config.docker_environment_prefix
     end
 
+    def hosting_env_file
+      @config.hosting_env_file
+    end
+
     def save
       File.write(@config_path, @config.to_yaml)
       File.chmod(@config_path, 0o600)
     end
 
+    def deploy_env(site_name, env)
+      File.write(env_file(site_name), env)
+      File.chmod(env_file(site_name), 0o600)
+    end
+
+    def env_file(site_name)
+      File.join(
+        @config.docker_environment_dir,
+        "#{@config.docker_environment_prefix}#{site_name}"
+      )
+    end
+
+    def env_file_custom(site_name)
+      File.join(
+        @config.docker_environment_dir,
+        "#{@config.docker_environment_prefix}#{site_name}-custom"
+      )
+    end
+
     private def init_db
       DB.open "sqlite3://#{@db_path}" do |db|
-        db.exec "create table sites (name text PRIMARY KEY, ip_id integer, db_name text, db_username text, db_password text)"
+        db.exec "create table sites (name text PRIMARY KEY, ip_id integer)"
         db.exec "create table ips (ip text)"
+        db.exec "create table dbs (site_id integer, confname text, dbname text, username text, password text)"
 
         insert_ips = Array(String).new
         (1..254).each do |x|

@@ -10,5 +10,9 @@ module Wsman
         {status.exit_code, stderr.to_s.strip}
       end
     end
+
+    def self.randstr(length)
+      (0...length).map { (65 + rand(26)).chr }.join
+    end
   end
 end

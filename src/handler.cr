@@ -4,7 +4,6 @@ require "./external/nginx"
 require "./external/systemd"
 require "./external/awslogs"
 require "./external/mysql"
-require "./external/site_environment"
 
 module Wsman
   class Handler
@@ -16,7 +15,6 @@ module Wsman
       @systemd = Wsman::External::Systemd.new(@config)
       @awslogs = Wsman::External::Awslogs.new(@config)
       @mysql = Wsman::External::Mysql.new(@config)
-      @site_env = Wsman::External::SiteEnvironment.new(@config)
       @log = Logger.new(STDOUT)
       @site_manager = Wsman::SiteManager.new(@config)
     end
@@ -55,17 +53,25 @@ module Wsman
         else
           @log.info("  Docker-compose file is up-to-date. No changes necessary.")
         end
-        @log.info("  Checking DB config...")
-        if @config.has_db_config?(site_name)
-          @log.info("  Site already has DB configuration.")
-        else
-          @log.info("  Site doesn't have DB configuration, generating...")
-          db_name, db_username, db_password = @mysql.generate_creds(site_name)
-          @config.set_db_config(site_name, db_name, db_username, db_password)
-          @mysql.setup_db(db_name, db_username, db_password)
-          @log.info("  Writing site environment to #{@site_env.env_file(site_name)}...")
-          @site_env.deploy_env(site_name, site.render_site_env)
-          restart_service = true
+        @log.info("  Applying DB config...")
+        site.siteconf.databases.each do |db|
+          if @config.has_db?(site_name, db)
+            @log.info("    #{db} already exists.")
+          else
+            @log.info("    #{db} doesn't exist, creating...")
+            db_name = @mysql.generate_name(site_name, db)
+            db_password = Wsman::Util.randstr(32)
+            @mysql.setup_db(db_name, db_name, db_password)
+            @log.info("    #{db} created as #{db_name}")
+            if @config.add_db_config(site_name, db, db_name, db_name, db_password)
+              @log.info("    #{db} configuration has been saved.")
+            else
+              @log.error("    Error saving configuration for #{db}!")
+            end
+            @log.info("  Writing site environment to #{site.env_file}...")
+            @config.deploy_env(site_name, site.render_site_env)
+            restart_service = true
+          end
         end
         @log.info("  Enabling systemd service for the site runtime container...")
         if @systemd.site_enable(site_name)

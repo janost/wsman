@@ -9,6 +9,7 @@ module Wsman
   module Model
     class Site
       getter site_name
+      getter siteconf
 
       DIR_TEMPLATES = "ws-template"
       DIR_CONFIG = "ws-config"
@@ -20,7 +21,7 @@ module Wsman
         if File.exists?(File.join(subdir(DIR_CONFIG), SITECONF_FILE))
           @siteconf = SiteConfig.from_yaml(File.read(File.join(subdir(DIR_CONFIG), SITECONF_FILE)))
         else
-          @siteconf = nil
+          @siteconf = SiteConfig.new
         end
       end
 
@@ -66,6 +67,14 @@ module Wsman
         Dir["#{subdir("cert")}/*.crt"].size == 1 && Dir["#{subdir("cert")}/*.key"].size == 1
       end
 
+      def env_file
+        @config.env_file(@site_name)
+      end
+  
+      def env_file_custom
+        @config.env_file_custom(@site_name)
+      end
+
       private def prepare_dirs
         subdir("htdocs")
         subdir("cert")
@@ -85,7 +94,7 @@ module Wsman
         if File.exists?(File.join(subdir(DIR_TEMPLATES), template_name))
           env.loader = Crinja::Loader::FileSystemLoader.new(subdir(DIR_TEMPLATES))
         else
-          env.loader = Crinja::Loader::FileSystemLoader.new(File.join(@config.fixtures_dir, DIR_TEMPLATES))
+          env.loader = Crinja::Loader::FileSystemLoader.new(File.join(@config.fixtures_dir, "templates"))
         end
         env.get_template(template_name)
       end
@@ -109,7 +118,12 @@ module Wsman
       end
 
       private def template_values
-        db_name, db_username, db_password = @config.get_db_config(site_name)
+        # TODO: DB CONFIG WILL BE REWRITTEN
+        #db_name, db_username, db_password = @config.get_db_config(site_name)
+        env_files = Array(String).new
+        env_files << @config.hosting_env_file if File.exists?(@config.hosting_env_file)
+        env_files << env_file if File.exists?(env_file)
+        env_files << env_file_custom if File.exists?(env_file_custom)
         {
           "container_image" => @config.container_image,
           "user_group_numeric" => @config.user_group_numeric,
@@ -124,11 +138,10 @@ module Wsman
           "cert_path" => cert_path,
           "cert_key_path" => cert_key_path,
           "awslogs_prefix" => @config.awslogs_prefix,
-          "db_name" => db_name,
-          "db_username" => db_username,
-          "db_password" => db_password,
+          "databases" => @config.get_db_config(@site_name),
           "needs_dcompose" => needs_dcompose?,
-          "tls_enabled" => has_valid_cert?
+          "tls_enabled" => has_valid_cert?,
+          "env_files" => env_files
         }
       end
     end

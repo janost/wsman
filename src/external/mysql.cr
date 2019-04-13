@@ -10,12 +10,10 @@ module Wsman
         mysql_query("GRANT ALL ON #{db_name}.* TO '#{db_username}'@'%';")
       end
 
-      def generate_creds(site_name)
-        db_username = site_name.gsub(/[^a-zA-Z]/, "")
-        db_username = db_username[0, 32] if db_username.size > 32
-        db_name = db_username
-        db_password = Random::Secure.base64(16)
-        {db_name, db_username, db_password}
+      def generate_name(site_name, confname)
+        dbname = "#{confname}-#{site_name.split(".").first}"
+        dbname = dbname[0, 23] if dbname.size > 23
+        "#{dbname}-#{Wsman::Util.randstr(10)}"
       end
 
       private def mysql_query(query)
