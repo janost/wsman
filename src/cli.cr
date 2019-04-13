@@ -26,7 +26,7 @@ module Wsman
             handler.prepare_env
             log.info("Processing sites: " + handler.site_manager.names.join(", "))
             sites = handler.site_manager.sites
-            if sites.size == 0
+            if sites.empty?
               log.info("No sites found. Exiting...")
               exit 0
             end
