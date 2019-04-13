@@ -2,7 +2,7 @@ version: '3'
 
 services:
   php:
-    image: {{ container_image }}
+    image: "{{ container_image }}:{{ php_version }}"
     user: {{ user_group_numeric }}
     env_file:{% for envfile in env_files %}
       - {{ envfile }}{% endfor %}

@@ -88,6 +88,13 @@ module Wsman
               log.info("Site #{opts.site} doesn't exist yet, moving on...")
             end
             log.info("Installing artifact #{opts.zip} as #{opts.site}...")
+            handler.site_manager.create_site_root(opts.site)
+            status,output = Wsman::Util.cmd("unzip", ["-o", opts.zip, "-d", handler.site_manager.site_root(opts.site)])
+            if status == 0
+              log.info("  Installation successful.")
+            else
+              log.error("  Installation failed.")
+            end
           end
         end
       end

@@ -5,10 +5,30 @@ require "./model/db_config"
 
 module Wsman
   class Config
+    DEFAULT_NGINX_CONF_DIR = "/etc/nginx"
+    DEFAULT_WEB_ROOT_DIR = "/srv/www"
+    DEFAULT_CONTAINER_SUBNET = "172.28."
+    DEFAULT_CONTAINER_NETWORK = "web"
+    DEFAULT_CONTAINER_IMAGE = "webdevops/php"
+    DEFAULT_CONTAINER_HTDOCS = "/htdocs"
+    DEFAULT_DOCKER_COMPOSE_FILENAME = "docker-compose.yml"
+    DEFAULT_WEB_USER = "web"
+    DEFAULT_WEB_GROUP = "web"
+    DEFAULT_PHPFPM_PORT = 9000
+    DEFAULT_TEMPLATE_SERVICE_NAME = "wsd"
+    DEFAULT_AWSLOGS_PREFIX = "simple-webhost"
+    DEFAULT_AWSLOGS_CONFIG_PATH = "/var/awslogs/etc/config"
+    DEFAULT_MYSQL_PWD_CMD = "/opt/get-db-password.sh"
+    DEFAULT_SYSTEMD_SERVICE_DIR = "/etc/systemd/system"
+    DEFAULT_DOCKER_ENVIRONMENT_DIR = "/etc/wsman-sites"
+    DEFAULT_DOCKER_ENVIRONMENT_PREFIX = "wsd-"
+    DEFAULT_HOSTING_ENV_FILE = "/etc/wsman-sites/hosting-env"
+    DEFAULT_STACK_NAME_CMD = "/opt/stack-name.sh"
+
     YAML.mapping(
       nginx_conf_dir: {
         type:    String,
-        default: "/etc/nginx",
+        default: DEFAULT_NGINX_CONF_DIR,
       },
       fixtures_dir: {
         type:    String,
@@ -16,100 +36,99 @@ module Wsman
       },
       web_root_dir: {
         type:    String,
-        default: "/srv/www",
+        default: DEFAULT_WEB_ROOT_DIR,
       },
       docker_compose_filename: {
         type:    String,
-        default: "docker-compose.yml",
+        default: DEFAULT_DOCKER_COMPOSE_FILENAME,
       },
       container_image: {
         type:    String,
-        default: "webdevops/php:alpine-php7",
+        default: DEFAULT_CONTAINER_IMAGE,
       },
       container_htdocs: {
         type:    String,
-        default: "/htdocs",
+        default: DEFAULT_CONTAINER_HTDOCS,
       },
       container_subnet: {
         type:    String,
-        default: "172.28.200.",
+        default: DEFAULT_CONTAINER_SUBNET,
       },
       container_network: {
         type:    String,
-        default: "web",
+        default: DEFAULT_CONTAINER_NETWORK,
       },
       web_user: {
         type:    String,
-        default: "web",
+        default: DEFAULT_WEB_USER,
       },
       web_group: {
         type:    String,
-        default: "web",
+        default: DEFAULT_WEB_GROUP,
       },
       phpfpm_port: {
         type:    Int32,
-        default: 9000,
+        default: DEFAULT_PHPFPM_PORT,
       },
       template_service_name: {
         type:    String,
-        default: "wsd",
+        default: DEFAULT_TEMPLATE_SERVICE_NAME,
       },
       awslogs_prefix: {
         type:    String,
-        default: "simple-webhost",
+        default: DEFAULT_AWSLOGS_PREFIX,
       },
       awslogs_config_path: {
         type:    String,
-        default: "/var/awslogs/etc/config",
+        default: DEFAULT_AWSLOGS_CONFIG_PATH,
       },
       mysql_pwd_cmd: {
         type:    String,
-        default: "/opt/get-db-password.sh",
+        default: DEFAULT_MYSQL_PWD_CMD,
       },
       systemd_service_dir: {
         type:    String,
-        default: "/etc/systemd/system",
+        default: DEFAULT_SYSTEMD_SERVICE_DIR,
       },
       docker_environment_dir: {
         type:    String,
-        default: "/etc/wsman-sites",
+        default: DEFAULT_DOCKER_ENVIRONMENT_DIR,
       },
       docker_environment_prefix: {
         type:    String,
-        default: "wsd-",
+        default: DEFAULT_DOCKER_ENVIRONMENT_PREFIX,
       },
       hosting_env_file: {
         type:    String,
-        default: "/etc/wsman-sites/hosting-env",
+        default: DEFAULT_HOSTING_ENV_FILE,
       },
       stack_name_cmd: {
         type:    String,
-        default: "/opt/stack-name.sh",
+        default: DEFAULT_STACK_NAME_CMD,
       },
     )
 
     def initialize(config_base)
-      @nginx_conf_dir = "/etc/nginx"
+      @nginx_conf_dir = DEFAULT_NGINX_CONF_DIR
       @fixtures_dir = File.join(config_base, "fixtures")
-      @web_root_dir = "/srv/www"
-      # Currently we're limited to a /16 subnet
-      @container_subnet = "172.28."
-      @container_network = "web"
-      @container_image = "webdevops/php:alpine-php7"
-      @container_htdocs = "/htdocs"
-      @docker_compose_filename = "docker-compose.yml"
-      @web_user = "web"
-      @web_group = "web"
-      @phpfpm_port = 9000
-      @template_service_name = "wsd"
-      @awslogs_prefix = "simple-webhost"
-      @awslogs_config_path = "/var/awslogs/etc/config"
-      @mysql_pwd_cmd = "/opt/get-db-password.sh"
-      @systemd_service_dir = "/etc/systemd/system"
-      @docker_environment_dir = "/etc/wsman-sites"
-      @docker_environment_prefix = "wsd-"
-      @hosting_env_file = "/etc/wsman-sites/hosting-env"
-      @stack_name_cmd = "/opt/stack-name.sh"
+      @web_root_dir = DEFAULT_WEB_ROOT_DIR
+      @container_subnet = DEFAULT_CONTAINER_SUBNET
+      @container_network = DEFAULT_CONTAINER_NETWORK
+      @container_image = DEFAULT_CONTAINER_IMAGE
+      @container_htdocs = DEFAULT_CONTAINER_HTDOCS
+      @docker_compose_filename = DEFAULT_DOCKER_COMPOSE_FILENAME
+      @web_user = DEFAULT_WEB_USER
+      @web_group = DEFAULT_WEB_GROUP
+      @phpfpm_port = DEFAULT_PHPFPM_PORT
+      @template_service_name = DEFAULT_TEMPLATE_SERVICE_NAME
+      @awslogs_prefix = DEFAULT_AWSLOGS_PREFIX
+      @awslogs_config_path = DEFAULT_AWSLOGS_CONFIG_PATH
+      @mysql_pwd_cmd = DEFAULT_MYSQL_PWD_CMD
+      @systemd_service_dir = DEFAULT_SYSTEMD_SERVICE_DIR
+      @docker_environment_dir = DEFAULT_DOCKER_ENVIRONMENT_DIR
+      @docker_environment_prefix = DEFAULT_DOCKER_ENVIRONMENT_PREFIX
+      @hosting_env_file = DEFAULT_HOSTING_ENV_FILE
+      @stack_name_cmd = DEFAULT_STACK_NAME_CMD
     end
   end
 

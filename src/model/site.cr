@@ -118,8 +118,6 @@ module Wsman
       end
 
       private def template_values
-        # TODO: DB CONFIG WILL BE REWRITTEN
-        #db_name, db_username, db_password = @config.get_db_config(site_name)
         env_files = Array(String).new
         env_files << @config.hosting_env_file if File.exists?(@config.hosting_env_file)
         env_files << env_file if File.exists?(env_file)
@@ -141,7 +139,8 @@ module Wsman
           "databases" => @config.get_db_config(@site_name),
           "needs_dcompose" => needs_dcompose?,
           "tls_enabled" => has_valid_cert?,
-          "env_files" => env_files
+          "env_files" => env_files,
+          "php_version" => @siteconf.php_version
         }
       end
     end
