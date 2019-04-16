@@ -22,7 +22,7 @@ module Wsman
       Dir.mkdir_p(site_root(site_name))
     end
 
-    def cleanup_site(site_name)
+    def delete_site_root(site_name)
       Wsman::Util.remove_file(site_root(site_name))
     end
 

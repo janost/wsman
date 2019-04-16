@@ -241,7 +241,7 @@ module Wsman
       databases
     end
 
-    def cleanup_site(site_name)
+    def delete_site_config(site_name)
       Wsman::Util.remove_file(env_file(site_name))
       DB.open "sqlite3://#{@db_path}" do |db|
         site_id = db_site_id(db, site_name)

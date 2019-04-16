@@ -17,7 +17,7 @@ module Wsman
         File.join(@config.awslogs_config_path, "wsman-#{site_name}.conf")
       end
 
-      def cleanup_site(site_name)
+      def delete_site_config(site_name)
         Wsman::Util.remove_file(site_config_path(site_name))
       end
     end

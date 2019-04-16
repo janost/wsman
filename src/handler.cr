@@ -116,12 +116,12 @@ module Wsman
     def cleanup(site_name)
       @log.info("Cleaning up #{site_name}.")
       @systemd.site_disable_now(site_name)
-      db_config = @config.get_db_config(site_name).first
-      @mysql.drop_db(db_config.dbname, db_config.username)
-      @site_manager.cleanup_site(site_name)
-      @nginx.cleanup_site(site_name)
-      @awslogs.cleanup_site(site_name)
-      @config.cleanup_site(site_name)
+      databases = @config.get_db_config(site_name)
+      @mysql.delete_databases(databases)
+      @site_manager.delete_site_root(site_name)
+      @nginx.delete_site_config(site_name)
+      @awslogs.delete_site_config(site_name)
+      @config.delete_site_config(site_name)
       @log.info("Successfully cleaned up #{site_name}.")
     end
 
