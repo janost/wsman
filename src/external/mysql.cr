@@ -10,6 +10,21 @@ module Wsman
         mysql_query("GRANT ALL ON #{db_name}.* TO '#{db_username}'@'%';")
       end
 
+      def drop_db(db_name)
+        mysql_query("DROP DATABASE #{db_name};")
+      end
+
+      def drop_user(username)
+        mysql_query("DROP USER '#{username}'@'%';");
+      end
+
+      def delete_databases(databases)
+        databases.each do |db|
+          drop_db(db.dbname)
+          drop_user(db.username)
+        end
+      end
+
       def generate_name(site_name, confname)
         dbname = "#{confname}-#{site_name.split(".").first}"
         dbname = dbname[0, 23] if dbname.size > 23

@@ -97,6 +97,24 @@ module Wsman
             end
           end
         end
+        sub "cleanup" do
+          desc "Cleans up a site from the server."
+          usage "cleanup --site <sitename>"
+          option "-s SITE", "--site=SITE", type: String, required: true, desc: "Main hostname of the site. This is also used as the directory name."
+          run do |opts, args|
+            handler = Wsman::Handler.new
+            handler.cleanup(opts.site)
+          end
+        end
+
+        sub "list_sites" do
+          desc "List the stored sites."
+          usage "list_sites"
+          run do |opts, args|
+            handler = Wsman::Handler.new
+            puts handler.list_sites
+          end
+        end
       end
     end
   end

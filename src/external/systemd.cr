@@ -36,6 +36,11 @@ module Wsman
         status == 0
       end
 
+      def site_disable_now(site_name)
+        status, _ = Wsman::Util.cmd("/bin/systemctl", ["disable", "#{@config.template_service_name}@#{site_name}", "--now"])
+        status == 0
+      end
+
       def site_start(site_name)
         status, _ = Wsman::Util.cmd("/bin/systemctl", ["start", "#{@config.template_service_name}@#{site_name}"])
         status == 0

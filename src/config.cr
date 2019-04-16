@@ -153,6 +153,10 @@ module Wsman
       @wsman_version = "0.1"
     end
 
+    def db_path
+      @db_path
+    end
+
     def nginx_conf_dir
       @config.nginx_conf_dir
     end
@@ -235,6 +239,15 @@ module Wsman
         end
       end
       databases
+    end
+
+    def delete_site_config(site_name)
+      Wsman::Util.remove_file(env_file(site_name))
+      DB.open "sqlite3://#{@db_path}" do |db|
+        site_id = db_site_id(db, site_name)
+        db.exec "DELETE FROM sites WHERE ip_id = ?", site_id
+        db.exec "DELETE FROM dbs WHERE site_id = ?", site_id
+      end
     end
 
     def db_site_id(db, site_name)
