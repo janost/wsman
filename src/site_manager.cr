@@ -22,6 +22,10 @@ module Wsman
       Dir.mkdir_p(site_root(site_name))
     end
 
+    def cleanup_site(site_name)
+      Wsman::Util.remove_file(site_root(site_name))
+    end
+
     def sites
       @sites.clear
       names.each do |site_name|

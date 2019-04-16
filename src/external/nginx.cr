@@ -7,7 +7,7 @@ module Wsman
       end
 
       def site_config_exists?(site_name)
-        File.exists(site_config_path(site_name))
+        File.exists?(site_config_path(site_name))
       end
 
       def deploy_site_config(site_name, config)
@@ -29,6 +29,10 @@ module Wsman
         result = File.join(@config.nginx_conf_dir, "includes")
         Dir.mkdir_p(result)
         result
+      end
+
+      def cleanup_site(site_name)
+        Wsman::Util.remove_file(site_config_path(site_name))
       end
     end
   end

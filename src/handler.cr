@@ -112,5 +112,33 @@ module Wsman
       @log.info("  Deploying awslogs config #{@awslogs.site_config_path(site_name)}...")
       @awslogs.deploy_site_config(site_name, site.render_awslogs)
     end
+
+    def cleanup(site_name)
+      @log.info("Cleaning up #{site_name}.")
+      @systemd.site_disable_now(site_name)
+      db_config = @config.get_db_config(site_name).first
+      @mysql.drop_db(db_config.dbname, db_config.username)
+      @site_manager.cleanup_site(site_name)
+      @nginx.cleanup_site(site_name)
+      @awslogs.cleanup_site(site_name)
+      @config.cleanup_site(site_name)
+      @log.info("Successfully cleaned up #{site_name}.")
+    end
+
+    def list_sites
+      DB.open "sqlite3://#{@config.db_path}" do |db|
+        db.query "SELECT * FROM sites" do |rs|
+          rs.column_names.each do |c|
+            print "|#{c}"
+          end
+          puts
+          rs.each do
+            name = rs.read(String)
+            id = rs.read(Int32)
+            puts "#{name} #{id}"
+          end
+        end
+      end
+    end
   end
 end
