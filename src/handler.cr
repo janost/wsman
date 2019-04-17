@@ -60,6 +60,7 @@ module Wsman
           else
             @log.info("    #{db} doesn't exist, creating...")
             db_name = @mysql.generate_name(site_name, db)
+            @log.info("    Creating database #{db_name}")
             db_password = Wsman::Util.randstr(32)
             @mysql.setup_db(db_name, db_name, db_password)
             @log.info("    #{db} created as #{db_name}")
