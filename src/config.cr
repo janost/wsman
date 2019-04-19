@@ -351,7 +351,8 @@ module Wsman
     def deploy_env(site_name, env)
       File.write(env_file(site_name), env)
       File.chmod(env_file(site_name), 0o600)
-      add_read_permission_for_web_group(env_file(site_name))
+      Wsman::Util.set_owner("", "web", file_path, true)
+      Wsman::Util.set_permission("g+rwx", file_path, true)
     end
 
     def env_file(site_name)
@@ -382,11 +383,6 @@ module Wsman
         end
         db.exec "insert into ips (ip) values #{insert_ips.join(",")}"
       end
-    end
-
-    private def add_read_permission_for_web_group(file_path)
-      Wsman::Util.set_owner("", "web", file_path, true)
-      Wsman::Util.set_permission("g+rwx", file_path, true)
     end
   end
 end
