@@ -34,9 +34,12 @@ module Wsman
       end
     end
 
-    def self.set_facl_for_user(user, perm, file, recursive = false)
-      modification = "u:#{user}:#{perm}"
-      Wsman::Util.cmd("setfacl", [recursive ? "-R" : "", "-m", modification, file])
+    def self.set_owner(user, group, file, recursive = false)
+      Wsman::Util.cmd("chown", [recursive ? "-R" : "", "#{user}:#{group}", file])
+    end
+
+    def self.set_permission(perm, file, recursive = false)
+      Wsman::Util.cmd("chmod", [recursive ? "-R" : "", perm, file])
     end
   end
 end
