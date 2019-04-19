@@ -89,8 +89,10 @@ module Wsman
             end
             log.info("Installing artifact #{opts.zip} as #{opts.site}...")
             handler.site_manager.create_site_root(opts.site)
-            status,output = Wsman::Util.cmd("unzip", ["-o", opts.zip, "-d", handler.site_manager.site_root(opts.site)])
+            site_root = handler.site_manager.site_root(opts.site)
+            status,output = Wsman::Util.cmd("unzip", ["-o", opts.zip, "-d", site_root])
             if status == 0
+              Wsman::Util.set_facl_for_user("web", "rwx", site_root, true)
               log.info("  Installation successful.")
             else
               log.error("  Installation failed.")

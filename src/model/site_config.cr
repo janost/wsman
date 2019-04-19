@@ -7,6 +7,7 @@ module Wsman
       DEFAULT_SITE_TYPE = "php"
       DEFAULT_DATABASES = ["main"]
       DEFAULT_HOSTS = Array(String).new
+      DEFAULT_DRUPAL_DOCROOT = "htdocs/docroot"
 
       YAML.mapping(
         php_version: {
@@ -35,6 +36,13 @@ module Wsman
           default: DEFAULT_HOSTS,
           setter:  false,
         },
+        drupal_docroot: {
+          type: String,
+          key: "drupalDocroot",
+          nilable: true,
+          default: DEFAULT_DRUPAL_DOCROOT,
+          setter: false,
+        }
       )
 
       def initialize
@@ -42,6 +50,7 @@ module Wsman
         @site_type = DEFAULT_SITE_TYPE
         @databases = DEFAULT_DATABASES
         @hosts = DEFAULT_HOSTS
+        @drupal_docroot = DEFAULT_DRUPAL_DOCROOT
       end
 
       def full_hosts(base_domain)

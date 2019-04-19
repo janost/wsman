@@ -166,9 +166,8 @@ module Wsman
     end
 
     def web_root_dir
-      result = @config.web_root_dir
-      Dir.mkdir_p(result)
-      result
+      Dir.mkdir_p(@config.web_root_dir)
+      @config.web_root_dir
     end
 
     def container_ip(site_name)
@@ -352,6 +351,7 @@ module Wsman
     def deploy_env(site_name, env)
       File.write(env_file(site_name), env)
       File.chmod(env_file(site_name), 0o600)
+      add_read_permission_for_web_user(env_file(site_name))
     end
 
     def env_file(site_name)
@@ -382,6 +382,10 @@ module Wsman
         end
         db.exec "insert into ips (ip) values #{insert_ips.join(",")}"
       end
+    end
+
+    private def add_read_permission_for_web_user(file_path)
+      Wsman::Util.set_facl_for_user("web", "r", file_path)
     end
   end
 end

@@ -60,11 +60,12 @@ module Wsman
           else
             @log.info("    #{db} doesn't exist, creating...")
             db_name = @mysql.generate_name(site_name, db)
-            @log.info("    Creating database #{db_name}")
+            user = @mysql.generate_user(site_name)
+            @log.info("    Creating database #{db_name} with user #{user}")
             db_password = Wsman::Util.randstr(32)
-            @mysql.setup_db(db_name, db_name, db_password)
+            @mysql.setup_db(db_name, user, db_password)
             @log.info("    #{db} created as #{db_name}")
-            if @config.add_db_config(site_name, db, db_name, db_name, db_password)
+            if @config.add_db_config(site_name, db, db_name, user, db_password)
               @log.info("    #{db} configuration has been saved.")
             else
               @log.error("    Error saving configuration for #{db}!")
@@ -75,6 +76,8 @@ module Wsman
         if @config.env_changed?(site_name, new_env)
           @log.info("  Writing site environment to #{site.env_file}...")
           @config.deploy_env(site_name, new_env)
+          @log.info("  Adding #{site.env_file} to #{@config.docker_compose_filename}...")
+          site.save_dcompose
           restart_service = true
         end
         @log.info("  Enabling systemd service for the site runtime container...")

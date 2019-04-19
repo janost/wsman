@@ -26,9 +26,15 @@ module Wsman
       end
 
       def generate_name(site_name, confname)
-        dbname = "#{confname}_#{site_name.split(".").first}"
+        dbname = "#{confname}_#{site_name.gsub('-', '_').split(".").first}"
         dbname = dbname[0, 23] if dbname.size > 23
         "#{dbname}_#{Wsman::Util.randstr(10)}"
+      end
+
+      def generate_user(site_name)
+        user = site_name.gsub('-', '_').split(".").first
+        user = user[0, 19]
+        "#{user}_#{Wsman::Util.randstr(10)}"
       end
 
       private def mysql_query(query)

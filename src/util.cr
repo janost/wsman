@@ -33,5 +33,10 @@ module Wsman
         log.info("Not removing #{path}, does not exist.")
       end
     end
+
+    def self.set_facl_for_user(user, perm, file, recursive = false)
+      modification = "u:#{user}:#{perm}"
+      Wsman::Util.cmd("setfacl", [recursive ? "-R" : "", "-m", modification, file])
+    end
   end
 end

@@ -141,7 +141,8 @@ module Wsman
           "tls_enabled" => has_valid_cert?,
           "env_files" => env_files,
           "php_version" => @siteconf.php_version,
-          "extra_hosts" => @siteconf.full_hosts(@site_name)
+          "extra_hosts" => @siteconf.full_hosts(@site_name),
+          "drupal_docroot" => @siteconf.drupal_docroot,
         }
       end
     end
