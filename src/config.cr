@@ -350,9 +350,9 @@ module Wsman
 
     def deploy_env(site_name, env)
       File.write(env_file(site_name), env)
-      File.chmod(env_file(site_name), 0o600)
-      Wsman::Util.set_owner("", "web", file_path, true)
-      Wsman::Util.set_permission("g+rwx", file_path, true)
+      File.chmod(env_file(site_name), 0o640)
+      gid = Wsman::Util.get_gid_for("web")
+      File.chown(env_file(site_name), gid: gid)
     end
 
     def env_file(site_name)

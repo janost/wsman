@@ -142,7 +142,7 @@ module Wsman
           "env_files" => env_files,
           "php_version" => @siteconf.php_version,
           "extra_hosts" => @siteconf.full_hosts(@site_name),
-          "drupal_docroot" => @siteconf.site_root,
+          "site_root" => @siteconf.site_root,
         }
       end
     end

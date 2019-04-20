@@ -92,8 +92,11 @@ module Wsman
             site_root = handler.site_manager.site_root(opts.site)
             status,output = Wsman::Util.cmd("unzip", ["-o", opts.zip, "-d", site_root])
             if status == 0
-              Wsman::Util.set_owner("", "web", site_root, true)
-              Wsman::Util.set_permission("g+rwx", site_root, true)
+              gid = Wsman::Util.get_gid_for("web")
+              Dir["#{site_root}/**/*"].each do |path|
+                File.chown(path, gid: gid)
+                File.chmod(path, 0o775)
+              end
               log.info("  Installation successful.")
             else
               log.error("  Installation failed.")

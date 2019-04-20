@@ -34,12 +34,9 @@ module Wsman
       end
     end
 
-    def self.set_owner(user, group, file, recursive = false)
-      Wsman::Util.cmd("chown", [recursive ? "-R" : "", "#{user}:#{group}", file])
-    end
-
-    def self.set_permission(perm, file, recursive = false)
-      Wsman::Util.cmd("chmod", [recursive ? "-R" : "", perm, file])
+    def self.get_gid_for(name)
+      _,id = Wsman::Util.cmd("id", ["-g", name])
+      id.to_i
     end
   end
 end
