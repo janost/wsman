@@ -166,9 +166,8 @@ module Wsman
     end
 
     def web_root_dir
-      result = @config.web_root_dir
-      Dir.mkdir_p(result)
-      result
+      Dir.mkdir_p(@config.web_root_dir)
+      @config.web_root_dir
     end
 
     def container_ip(site_name)
@@ -351,7 +350,9 @@ module Wsman
 
     def deploy_env(site_name, env)
       File.write(env_file(site_name), env)
-      File.chmod(env_file(site_name), 0o600)
+      File.chmod(env_file(site_name), 0o640)
+      gid = Wsman::Util.get_gid_for("web")
+      File.chown(env_file(site_name), gid: gid)
     end
 
     def env_file(site_name)

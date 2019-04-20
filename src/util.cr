@@ -33,5 +33,10 @@ module Wsman
         log.info("Not removing #{path}, does not exist.")
       end
     end
+
+    def self.get_gid_for(name)
+      _,id = Wsman::Util.cmd("id", ["-g", name])
+      id.to_i
+    end
   end
 end
