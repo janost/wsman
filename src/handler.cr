@@ -35,7 +35,7 @@ module Wsman
       @systemd.awslogs_restart
     end
 
-    def process_site(site)
+    def process_site(site, extra_envfile=nil)
       site_name = site.site_name
       @log.info("[#{site_name}] Validating configuration...")
       @log.info("  Looking for certificate and key...")
@@ -72,7 +72,12 @@ module Wsman
             end
           end
         end
-        new_env = site.render_site_env
+        if extra_envfile
+          extra_envs = File.read(extra_envfile)
+          new_env = site.render_site_env + "\n" + extra_envs
+        else
+          new_env = site.render_site_env
+        end
         if @config.env_changed?(site_name, new_env)
           @log.info("  Writing site environment to #{site.env_file}...")
           @config.deploy_env(site_name, new_env)

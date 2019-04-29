@@ -40,17 +40,25 @@ module Wsman
         sub "setup" do
           desc "Generate site configurations for the given site."
           usage "setup [options] <sitename>"
+          option "-e ENVFILE", "--envfile ENVFILE", type: String, required: false, desc: "Extra environment file to docker container."
           run do |_opts, args|
             log = Logger.new(STDOUT)
             if args.size == 0
               log.info("Please list sites to process.")
               Process.exit(0)
             end
+            if _opts.envfile
+              extra_envfile = _opts.envfile.to_s
+              unless File.exists?(extra_envfile)
+                log.error("Environment file '#{extra_envfile}' doesn't exist, aborting.")
+                exit 1
+              end
+            end
             handler = Wsman::Handler.new
             handler.prepare_env
             handler.site_manager.sites.each do |site|
               if args.includes? site.site_name
-                handler.process_site(site)
+                handler.process_site(site, _opts.envfile)
               end
             end
             handler.post_process
