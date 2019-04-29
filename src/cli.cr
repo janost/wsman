@@ -40,7 +40,7 @@ module Wsman
         sub "setup" do
           desc "Generate site configurations for the given site."
           usage "setup [options] <sitename>"
-          option "-e ENVFILE", "--envfile ENVFILE", type: String, required: false, desc: "Extra environment file to docker container."
+          option "-e ENVFILE", "--envfile ENVFILE", type: String, required: false, desc: "Extra environment file for docker container."
           run do |_opts, args|
             log = Logger.new(STDOUT)
             if args.size == 0
