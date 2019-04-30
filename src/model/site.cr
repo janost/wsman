@@ -70,9 +70,9 @@ module Wsman
       def env_file
         @config.env_file(@site_name)
       end
-  
-      def env_file_custom
-        @config.env_file_custom(@site_name)
+
+      def env_files_custom
+        @config.env_files_custom(@site_name)
       end
 
       private def prepare_dirs
@@ -121,7 +121,11 @@ module Wsman
         env_files = Array(String).new
         env_files << @config.hosting_env_file if File.exists?(@config.hosting_env_file)
         env_files << env_file if File.exists?(env_file)
-        env_files << env_file_custom if File.exists?(env_file_custom)
+        if env_files_custom.any?
+          env_files_custom.each do |env_file_custom|
+            env_files << env_file_custom if File.exists?(env_file_custom)
+          end
+        end
         {
           "container_image" => @config.container_image,
           "user_group_numeric" => @config.user_group_numeric,

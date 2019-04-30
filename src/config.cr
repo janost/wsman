@@ -226,7 +226,7 @@ module Wsman
       DB.open "sqlite3://#{@db_path}" do |db|
         site_id = db_site_id(db, site_name)
         return databases unless site_id
-        
+
         db.query "SELECT confname, dbname, username, password FROM dbs WHERE site_id = ?", site_id do |rs|
           rs.each do
             confname = rs.read(String)
@@ -362,11 +362,9 @@ module Wsman
       )
     end
 
-    def env_file_custom(site_name)
-      File.join(
-        @config.docker_environment_dir,
-        "#{@config.docker_environment_prefix}#{site_name}-custom"
-      )
+    # All -<postfix> postfixed envfile
+    def env_files_custom(site_name)
+      env_files = Dir["#{@config.docker_environment_dir}/#{@config.docker_environment_prefix}#{site_name}-*"]
     end
 
     private def init_db
