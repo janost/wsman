@@ -364,7 +364,7 @@ module Wsman
 
     # All -<postfix> postfixed envfile
     def env_files_custom(site_name)
-      env_files = Dir["#{@config.docker_environment_dir}/#{@config.docker_environment_prefix}#{site_name}-*"]
+      Dir["#{@config.docker_environment_dir}/#{@config.docker_environment_prefix}#{site_name}-*"]
     end
 
     private def init_db
