@@ -7,7 +7,7 @@ module Wsman
       DEFAULT_SITE_TYPE = "php"
       DEFAULT_DATABASES = ["main"]
       DEFAULT_HOSTS = Array(String).new
-      DEFAULT_SITE_ROOT = "htdocs/docroot"
+      DEFAULT_SITE_ROOT = "docroot"
 
       YAML.mapping(
         php_version: {
@@ -38,7 +38,7 @@ module Wsman
         },
         site_root: {
           type: String,
-          key: "site_root",
+          key: "siteRoot",
           nilable: true,
           default: DEFAULT_SITE_ROOT,
           setter: false,
