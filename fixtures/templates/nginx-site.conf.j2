@@ -39,7 +39,6 @@ server {
     ssl_certificate_key {{ cert_key_path }};
 
     include includes/ssl.conf;
-    include includes/methods.conf;
 
     access_log {{ web_root_dir }}/{{ site_name }}/log/access.log;
     error_log {{ web_root_dir }}/{{ site_name }}/log/error.log;
@@ -120,8 +119,6 @@ server {
     {% else %}
     index index.html;
     {% endif %}
-
-    include includes/methods.conf;
 
     access_log {{ web_root_dir }}/{{ site_name }}/log/access.log;
     error_log {{ web_root_dir }}/{{ site_name }}/log/error.log;
