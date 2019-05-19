@@ -10,8 +10,10 @@ server {
     access_log off;
 
     location ^~ /.well-known/ {
+        allow all;
+        auth_basic off;
         default_type "text/plain";
-        alias {{ web_root_dir }}/{{ site_name }}/htdocs/.well-known/;
+        alias {{ web_root_dir }}/{{ site_name }}/{{ site_root }}/.well-known/;
     }
 
     location / {
@@ -41,6 +43,11 @@ server {
 
     access_log {{ web_root_dir }}/{{ site_name }}/log/access.log;
     error_log {{ web_root_dir }}/{{ site_name }}/log/error.log;
+
+    location ^~ /.well-known/ {
+        allow all;
+        auth_basic off;
+    }
 
     # Deny access to hidden files and directories
     location ~ (^|/)\. {
@@ -118,6 +125,11 @@ server {
 
     access_log {{ web_root_dir }}/{{ site_name }}/log/access.log;
     error_log {{ web_root_dir }}/{{ site_name }}/log/error.log;
+
+    location ^~ /.well-known/ {
+        allow all;
+        auth_basic off;
+    }
 
     # Deny access to hidden files and directories
     location ~ (^|/)\. {
