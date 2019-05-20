@@ -146,7 +146,7 @@ module Wsman
           "env_files" => env_files,
           "php_version" => @siteconf.php_version,
           "extra_hosts" => @siteconf.full_hosts(@site_name),
-          "site_root" => @siteconf.site_root,
+          "site_root" => File.join("htdocs", @siteconf.site_root || ""),
         }
       end
     end

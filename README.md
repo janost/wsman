@@ -9,6 +9,20 @@ shards install
 crystal build --release -o wsman src/cli.cr
 ```
 
+## Static build
+You might want to statically build it in some cases, for example when you're building it on Arch, but shipping it to Ubuntu bionic, which has older shared libraries:  
+
+With podman:
+```
+podman build --tag=wsman-build .
+podman run --rm -it -v $PWD:/app -w /app wsman-build crystal build --static --release -o wsman src/cli.cr
+```  
+or with docker:  
+```
+docker build --tag=wsman-build .
+docker run --rm -it -v $PWD:/app -w /app wsman-build crystal build --static --release -o wsman src/cli.cr
+```
+
 ## Usage
 
 Currently there is a single `generate` command supported by the program.

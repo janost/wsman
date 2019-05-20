@@ -1,3 +1,6 @@
+require "llvm/lib_llvm"
+require "llvm/enums"
+
 require "clim"
 require "./handler"
 require "./util"

@@ -350,7 +350,7 @@ module Wsman
 
     def deploy_env(site_name, env)
       File.write(env_file(site_name), env)
-      File.chmod(env_file(site_name), 0o640)
+      File.chmod(env_file(site_name), 0o644)
       gid = Wsman::Util.get_gid_for("web")
       File.chown(env_file(site_name), gid: gid)
     end
