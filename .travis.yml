@@ -1,1 +1,12 @@
-language: crystal
+dist: xenial
+language: minimal
+
+services:
+- docker
+
+before_install:
+- docker build -t wsman-build .
+
+script:
+- docker run --rm -it -v $PWD:/app -w /app wsman-build shards install
+- docker run --rm -it -v $PWD:/app -w /app wsman-build crystal build --error-trace --static --release -o wsman src/cli.cr
