@@ -6,7 +6,7 @@ module Wsman
       DEFAULT_PHP_VERSION = "7.2"
       DEFAULT_SITE_TYPE = "php"
       DEFAULT_DATABASES = ["main"]
-      DEFAULT_HOSTS = Array(String).new
+      DEFAULT_HOSTS = Hash(String, String).new
       DEFAULT_SITE_ROOT = "docroot"
 
       YAML.mapping(
@@ -31,7 +31,7 @@ module Wsman
           setter:  false,
         },
         hosts: {
-          type:    Array(String),
+          type:    Hash(String, String),
           nilable: false,
           default: DEFAULT_HOSTS,
           setter:  false,
@@ -55,7 +55,7 @@ module Wsman
 
       def full_hosts(base_domain)
         result = Hash(String, String).new
-        @hosts.each do |host|
+        @hosts.each do |host, _folder|
           result[host.upcase] = "#{host}.#{base_domain}"
         end
         result
