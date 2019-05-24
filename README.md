@@ -1,3 +1,7 @@
+# wsman
+[![Build Status](https://travis-ci.org/janost/wsman.svg?branch=master)](https://travis-ci.org/janost/wsman)
+
+
 ## Introduction
 Tool for managing a simple multi-site PHP web hosting environment. Meant to be used on a stack built with [cfn-simple-webhost][cfn-simple-webhost].
 
