@@ -3,7 +3,7 @@ require "yaml"
 module Wsman
   module Model
     class SiteConfig
-      DEFAULT_PHP_VERSION = "7.2"
+      DEFAULT_PHP_VERSION = "7.3"
       DEFAULT_SITE_TYPE = "php"
       DEFAULT_DATABASES = ["main"]
       DEFAULT_HOSTS = Hash(String, String).new
