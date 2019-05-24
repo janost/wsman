@@ -9,7 +9,7 @@ module Wsman
     DEFAULT_WEB_ROOT_DIR = "/srv/www"
     DEFAULT_CONTAINER_SUBNET = "172.28."
     DEFAULT_CONTAINER_NETWORK = "web"
-    DEFAULT_CONTAINER_IMAGE = "webdevops/php"
+    DEFAULT_CONTAINER_IMAGE = "cheppers/php"
     DEFAULT_CONTAINER_HTDOCS = "/htdocs"
     DEFAULT_DOCKER_COMPOSE_FILENAME = "docker-compose.yml"
     DEFAULT_WEB_USER = "web"
