@@ -244,7 +244,7 @@ module Wsman
       Wsman::Util.remove_file(env_file(site_name))
       DB.open "sqlite3://#{@db_path}" do |db|
         site_id = db_site_id(db, site_name)
-        db.exec "DELETE FROM sites WHERE ip_id = ?", site_id
+        db.exec "DELETE FROM sites WHERE rowid = ?", site_id
         db.exec "DELETE FROM dbs WHERE site_id = ?", site_id
       end
     end
