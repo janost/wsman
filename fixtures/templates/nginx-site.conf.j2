@@ -53,12 +53,12 @@ server {
         return 403;
     }
 
-    {% if needs_dcompose %}
     location / {
-        try_files $uri /index.php?$query_string;
+      try_files $uri /$index/?$query_string;
     }
 
-    location @rewrite {
+    {% if needs_dcompose %}
+      location @rewrite {
         rewrite ^/(.*)$ /index.php?q=$1;
     }
 
@@ -71,7 +71,7 @@ server {
         include fastcgi_params;
         fastcgi_param   SCRIPT_NAME        $fastcgi_script_name;
         fastcgi_param   SCRIPT_FILENAME    /{{ site_root }}/$fastcgi_script_name;
-        fastcgi_buffers 16 16k; 
+        fastcgi_buffers 16 16k;
         fastcgi_buffer_size 32k;
     }
 
@@ -135,11 +135,11 @@ server {
         return 403;
     }
 
-    {% if needs_dcompose %}
     location / {
-        try_files $uri /index.php?$query_string;
+        try_files $uri /$index/?$query_string;
     }
 
+    {% if needs_dcompose %}
     location @rewrite {
         rewrite ^/(.*)$ /index.php?q=$1;
     }
@@ -153,7 +153,7 @@ server {
         include fastcgi_params;
         fastcgi_param   SCRIPT_NAME        $fastcgi_script_name;
         fastcgi_param   SCRIPT_FILENAME    /{{ site_root }}/$fastcgi_script_name;
-        fastcgi_buffers 16 16k; 
+        fastcgi_buffers 16 16k;
         fastcgi_buffer_size 32k;
     }
 
