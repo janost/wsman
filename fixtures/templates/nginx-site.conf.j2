@@ -53,8 +53,9 @@ server {
         return 403;
     }
 
+    {% if needs_dcompose %}
     location / {
-        try_files $uri /$index?$query_string;
+        try_files $uri /index.php?$query_string;
     }
     {% else %}
     location / {
@@ -140,8 +141,9 @@ server {
         return 403;
     }
 
+    {% if needs_dcompose %}
     location / {
-        try_files $uri /$index?$query_string;
+        try_files $uri /index.php?$query_string;
     }
     {% else %}
     location / {
