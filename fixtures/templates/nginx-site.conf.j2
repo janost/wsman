@@ -54,7 +54,7 @@ server {
     }
 
     location / {
-      try_files $uri /$index/?$query_string;
+      try_files $uri /$index?$query_string;
     }
 
     {% if needs_dcompose %}
@@ -136,7 +136,7 @@ server {
     }
 
     location / {
-        try_files $uri /$index/?$query_string;
+        try_files $uri /$index?$query_string;
     }
 
     {% if needs_dcompose %}
