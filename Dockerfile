@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine:3.10
 
 RUN echo '@edge http://dl-cdn.alpinelinux.org/alpine/edge/community' >>/etc/apk/repositories \
     && apk add --update --no-cache --force-overwrite \
@@ -8,10 +8,10 @@ RUN echo '@edge http://dl-cdn.alpinelinux.org/alpine/edge/community' >>/etc/apk/
         libevent-dev \
         libunwind-dev \
         libxml2-dev \
-        llvm \
-        llvm-dev \
-        llvm-libs \
-        llvm-static \
+        llvm8 \
+        llvm8-dev \
+        llvm8-libs \
+        llvm8-static \
         make \
         musl-dev \
         openssl-dev \
