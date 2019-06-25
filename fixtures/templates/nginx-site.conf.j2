@@ -53,9 +53,15 @@ server {
         return 403;
     }
 
+    {% if needs_dcompose %}
     location / {
-        try_files $uri /$index?$query_string;
+        try_files $uri /index.php?$query_string;
     }
+    {% else %}
+    location / {
+        try_files $uri /index.html?$query_string;
+    }
+    {% endif %}
 
     {% if needs_dcompose %}
     location @rewrite {
@@ -135,9 +141,15 @@ server {
         return 403;
     }
 
+    {% if needs_dcompose %}
     location / {
-        try_files $uri /$index?$query_string;
+        try_files $uri /index.php?$query_string;
     }
+    {% else %}
+    location / {
+        try_files $uri /index.html?$query_string;
+    }
+    {% endif %}
 
     {% if needs_dcompose %}
     location @rewrite {
