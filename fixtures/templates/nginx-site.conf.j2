@@ -54,11 +54,11 @@ server {
     }
 
     location / {
-      try_files $uri /$index?$query_string;
+        try_files $uri /$index?$query_string;
     }
 
     {% if needs_dcompose %}
-      location @rewrite {
+    location @rewrite {
         rewrite ^/(.*)$ /index.php?q=$1;
     }
 
