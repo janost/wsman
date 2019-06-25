@@ -54,7 +54,7 @@ server {
     }
 
     location / {
-      try_files $uri /$index?$query_string;
+        try_files $uri /$index?$query_string;
     }
     {% else %}
     location / {
