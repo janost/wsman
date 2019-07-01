@@ -93,13 +93,19 @@ module Wsman
             log.info("Installing artifact #{opts.zip} as #{opts.site}...")
             handler.site_manager.create_site_root(opts.site)
             site_root = handler.site_manager.site_root(opts.site)
+            site_docroot = handler.site_manager.site_docroot(opts.site)
             status,output = Wsman::Util.cmd("unzip", ["-o", opts.zip, "-d", site_root])
             if status == 0
               gid = Wsman::Util.get_gid_for("web")
+              uid = Wsman::Util.get_uid_for("web")
               Dir["#{site_root}/**/*"].each do |path|
-                File.chown(path, gid: gid)
-                if File.directory?(path)
-                  File.chmod(path, 0o775)
+                File.chown(path, uid: uid, gid: gid)
+              end
+              Dir["#{site_docroot}/**/*"].each do |path|
+                if File.file?(path)
+                  File.chmod(path, 0o644)
+                else
+                  File.chmod(path, 0o755)
                 end
               end
               log.info("  Installation successful.")

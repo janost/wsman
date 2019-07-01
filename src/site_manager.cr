@@ -18,6 +18,12 @@ module Wsman
       File.join(@config.web_root_dir, site_name)
     end
 
+    def site_docroot(site_name)
+      webroot = File.join(@config.web_root_dir, site_name)
+      site = Wsman::Model::Site.new(@config, site_name)
+      File.join(webroot, site.siteconf.site_root)
+    end
+
     def create_site_root(site_name)
       Dir.mkdir_p(site_root(site_name))
     end
