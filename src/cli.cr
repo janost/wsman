@@ -98,7 +98,9 @@ module Wsman
               gid = Wsman::Util.get_gid_for("web")
               Dir["#{site_root}/**/*"].each do |path|
                 File.chown(path, gid: gid)
-                File.chmod(path, 0o775)
+                if File.directory?(path)
+                  File.chmod(path, 0o775)
+                end
               end
               log.info("  Installation successful.")
             else
