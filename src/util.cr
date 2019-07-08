@@ -38,5 +38,10 @@ module Wsman
       _,id = Wsman::Util.cmd("id", ["-g", name])
       id.to_i
     end
+
+    def self.get_uid_for(name)
+      _,id = Wsman::Util.cmd("id", ["-u", name])
+      id.to_i
+    end
   end
 end

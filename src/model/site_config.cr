@@ -3,6 +3,8 @@ require "yaml"
 module Wsman
   module Model
     class SiteConfig
+      getter site_root
+
       DEFAULT_PHP_VERSION = "7.3"
       DEFAULT_SITE_TYPE = "php"
       DEFAULT_DATABASES = ["main"]
@@ -39,7 +41,7 @@ module Wsman
         site_root: {
           type: String,
           key: "siteRoot",
-          nilable: true,
+          nilable: false,
           default: DEFAULT_SITE_ROOT,
           setter: false,
         }
