@@ -58,6 +58,7 @@ module Wsman
       def full_hosts(base_domain)
         result = Hash(String, String).new
         @hosts.each do |host, _folder|
+          host = host.gsub(/[^0-9a-z]/i, '_')
           result[host.upcase] = "#{host}.#{base_domain}"
         end
         result
