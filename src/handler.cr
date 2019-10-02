@@ -119,6 +119,7 @@ module Wsman
 
     def cleanup(site_name)
       @log.info("Cleaning up #{site_name}.")
+      @systemd.site_stop(site_name)
       @systemd.site_disable_now(site_name)
       databases = @config.get_db_config(site_name)
       @mysql.delete_databases(databases)
