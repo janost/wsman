@@ -43,7 +43,8 @@ module Wsman
         sub "setup" do
           desc "Generate site configurations for the given site."
           usage "setup [options] <sitename>"
-          run do |_opts, args|
+          option "--skip-solr", type: Bool, desc: "Skip Solr core install, even if it's configured.", default: false
+          run do |opts, args|
             log = Logger.new(STDOUT)
             if args.size == 0
               log.info("Please list sites to process.")
@@ -53,10 +54,29 @@ module Wsman
             handler.prepare_env
             handler.site_manager.sites.each do |site|
               if args.includes? site.site_name
+                site.skip_solr = opts.skip_solr
                 handler.process_site(site)
               end
             end
             handler.post_process
+          end
+        end
+
+        sub "setup_solr" do
+          desc "Generate solr configurations for the given site."
+          usage "setup_solr <sitename>"
+          run do |opts, args|
+            log = Logger.new(STDOUT)
+            if args.size == 0
+              log.info("Please list sites to process.")
+              Process.exit(0)
+            end
+            handler = Wsman::Handler.new
+            handler.site_manager.sites.each do |site|
+              if args.includes? site.site_name
+                handler.setup_solr(site)
+              end
+            end
           end
         end
       end
@@ -121,6 +141,15 @@ module Wsman
           run do |opts, args|
             handler = Wsman::Handler.new
             handler.cleanup(opts.site)
+          end
+        end
+        sub "cleanup_solr" do
+          desc "Cleans up a site's solr"
+          usage "cleanup_solr --site <sitename>"
+          option "-s SITE", "--site=SITE", type: String, required: true, desc: "Main hostname of the site. This is also used as the directory name."
+          run do |opts, args|
+            handler = Wsman::Handler.new
+            handler.cleanup_solr(opts.site)
           end
         end
 

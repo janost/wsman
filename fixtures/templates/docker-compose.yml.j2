@@ -8,6 +8,7 @@ services:
       - {{ envfile }}{% endfor %}
     volumes:
       - {{ web_root_dir }}/{{ site_name }}/htdocs:{{ container_htdocs }}
+      - {{ web_root_dir }}/{{ site_name }}/data:/data
     networks:
       {{ container_network }}:
         ipv4_address: {{ container_ip }}

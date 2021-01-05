@@ -4,6 +4,7 @@ require "./external/nginx"
 require "./external/systemd"
 require "./external/awslogs"
 require "./external/mysql"
+require "crinja"
 
 module Wsman
   class Handler
@@ -19,9 +20,17 @@ module Wsman
       @site_manager = Wsman::SiteManager.new(@config)
     end
 
+    private def crinja_template(template_name)
+      env = Crinja.new
+      env.loader = Crinja::Loader::FileSystemLoader.new(File.join(@config.fixtures_dir, "templates"))
+      env.get_template(template_name)
+    end
+
     def prepare_env
-      @log.info("Deploying systemd service: #{@config.template_service_name}...")
+      @log.info("Deploying systemd services: #{@config.template_service_name}...")
       @systemd.deploy_service(File.join(@config.fixtures_dir, "systemd", "#{@config.template_service_name}@.service"))
+      File.write("/tmp/solr@.service", crinja_template("solr@.service.j2").render({"solr_data_path" => @config.solr_data_path}))
+      @systemd.deploy_service("/tmp/solr@.service")
       @log.info("Reloading systemd configuration...")
       @systemd.daemon_reload
       @log.info("Deploying nginx includes...")
@@ -72,14 +81,8 @@ module Wsman
             end
           end
         end
-        new_env = site.render_site_env
-        if @config.env_changed?(site_name, new_env)
-          @log.info("  Writing site environment to #{site.env_file}...")
-          @config.deploy_env(site_name, new_env)
-          @log.info("  Adding #{site.env_file} to #{@config.docker_compose_filename}...")
-          site.save_dcompose
-          restart_service = true
-        end
+        setup_solr(site)
+        restart_service = setup_env(site)
         @log.info("  Enabling systemd service for the site runtime container...")
         if @systemd.site_enable(site_name)
           @log.info("  The site container has been enabled.")
@@ -117,8 +120,93 @@ module Wsman
       @awslogs.deploy_site_config(site_name, site.render_awslogs)
     end
 
+    def setup_env(site)
+      new_env = site.render_site_env
+      restart_service = false
+      if @config.env_changed?(site.site_name, new_env)
+        @log.info("  Writing site environment to #{site.env_file}...")
+        @config.deploy_env(site.site_name, new_env)
+        @log.info("  Adding #{site.env_file} to #{@config.docker_compose_filename}...")
+        site.save_dcompose
+        restart_service = true
+      end
+      restart_service
+    end
+
+    def setup_solr(site)
+      site_name = site.site_name
+      if !site.skip_solr
+        solr_cores = site.siteconf.solr_cores
+        if !solr_cores.empty?
+          @log.info("  Check Solr config...")
+          solr_version = site.siteconf.solr_version
+          if solr_version.nil?
+              @log.error("    The solrCores added in the site.yml, but the solrVersion is missing!")
+          else
+            if @config.has_solr_container?(solr_version)
+              @log.info("    The Solr container with version '#{solr_version}' already exists.")
+            else
+              @log.info("    The Solr container with version '#{solr_version}' doesn't exist, creating...")
+            end
+            @config.create_or_update_solr_container(solr_version, site.render_solr_dcompose)
+            if @systemd.solr_instance_enable(@config.solr_version_name(solr_version))
+              @log.info("    The Solr instance container has been enabled.")
+            else
+              @log.error("    Error when enabling Solr instance container!")
+            end
+            if @systemd.solr_instance_start(@config.solr_version_name(solr_version))
+              @log.info("    The Solr instance container has been started.")
+            else
+              @log.error("    Error when starting Solr instance container!")
+            end
+            db_solr_cores = @config.get_solr_cores_from_db(site_name)
+            solr_cores.each do |confname|
+              solr_core_config_dir = site.solr_core_config_dir(confname)
+              if !solr_core_config_dir.nil?
+                solr_corename = @config.generate_solr_corename(confname, site_name)
+                if @config.solr_core_exists?(db_solr_cores, solr_corename)
+                  @config.update_solr_core_site_id(site_name, solr_corename)
+                  @log.info("    #{confname} core already exists on db, site id updated")
+                else
+                  @log.info("    #{confname} core not exists on db, now creating")
+                  solr_corename = @config.add_solr_config_to_db(confname, site_name, solr_version)
+                end
+                if !solr_corename.nil?
+                  @log.info("    #{confname} configuration has been saved.")
+                  @config.create_solr_core(solr_version, solr_corename, solr_core_config_dir)
+                  if @systemd.solr_instance_restart(@config.solr_version_name(solr_version))
+                    @log.info("    The Solr instance container has been restarted.")
+                  else
+                    @log.error("    Error when restart Solr instance container!")
+                  end
+                else
+                  @log.error("    Error saving configuration for #{confname}!")
+                end
+              else
+                @log.error("    The Solr config #{confname}'s directory not found!")
+              end
+            end
+          end
+        else
+          @log.info("  The site not uses Solr.")
+        end
+      else
+        @log.info("  Solr core install skipped.")
+      end
+      restart_site_service = setup_env(site)
+      if restart_site_service
+        @log.info("  Solr config changed, restarting systemd service for the site runtime container...")
+        if @systemd.site_restart(site_name)
+          @log.info("  The site container has been restarted.")
+        else
+          @log.error("  Error restarting site container!")
+        end
+      end
+    end
+
     def cleanup(site_name)
       @log.info("Cleaning up #{site_name}.")
+      cleanup_solr(site_name)
       @systemd.site_disable_now(site_name)
       databases = @config.get_db_config(site_name)
       @mysql.delete_databases(databases)
@@ -127,6 +215,31 @@ module Wsman
       @awslogs.delete_site_config(site_name)
       @config.delete_site_config(site_name)
       @log.info("Successfully cleaned up #{site_name}.")
+    end
+
+    def cleanup_solr(site_name)
+      solr_cores = @config.get_solr_cores_from_db(site_name)
+      if !solr_cores.empty?
+        @log.info("Start to remove Solr cores...")
+        solr_version = solr_cores.first.solr_version
+        solr_version_name = @config.solr_version_name(solr_version)
+        @config.delete_solr_cores(solr_cores)
+        @log.info("Solr core(s) removed from solr instance")
+        if @systemd.solr_instance_restart(solr_version_name)
+          @log.info("The solr instance container has been restarted.")
+        else
+          @log.error("Error when enabling solr instance container!")
+        end
+        @config.remove_solr_cores_from_db(site_name)
+        @log.info("Solr core(s) removed from database")
+        if ! @config.solr_instance_has_cores?(solr_cores.first.solr_instance_id)
+          @systemd.solr_instance_disable(solr_version_name)
+          @config.remove_solr_instance_from_db(solr_version)
+          @log.info("Solr instance removed from db")
+          @config.delete_solr_instance(solr_version)
+          @log.info("Solr instance removed")
+        end
+      end
     end
 
     def list_sites

@@ -2,6 +2,7 @@ require "yaml"
 require "sqlite3"
 
 require "./model/db_config"
+require "./model/solr_core_config"
 
 module Wsman
   class Config
@@ -24,6 +25,8 @@ module Wsman
     DEFAULT_DOCKER_ENVIRONMENT_PREFIX = "wsd-"
     DEFAULT_HOSTING_ENV_FILE = "/etc/wsman-sites/hosting-env"
     DEFAULT_STACK_NAME_CMD = "/opt/stack-name.sh"
+    DEFAULT_SOLR_IMAGE = "solr"
+    DEFAULT_SOLR_DATA_PATH = "/data/solr_instances"
 
     YAML.mapping(
       nginx_conf_dir: {
@@ -106,6 +109,14 @@ module Wsman
         type:    String,
         default: DEFAULT_STACK_NAME_CMD,
       },
+      solr_image: {
+        type:    String,
+        default: DEFAULT_SOLR_IMAGE,
+      },
+      solr_data_path: {
+        type:    String,
+        default: DEFAULT_SOLR_DATA_PATH,
+      }
     )
 
     def initialize(config_base)
@@ -129,6 +140,8 @@ module Wsman
       @docker_environment_prefix = DEFAULT_DOCKER_ENVIRONMENT_PREFIX
       @hosting_env_file = DEFAULT_HOSTING_ENV_FILE
       @stack_name_cmd = DEFAULT_STACK_NAME_CMD
+      @solr_image = DEFAULT_SOLR_IMAGE
+      @solr_data_path = DEFAULT_SOLR_DATA_PATH
     end
   end
 
@@ -150,6 +163,7 @@ module Wsman
       unless File.exists?(@db_path)
         init_db
       end
+      Dir.mkdir_p(@config.solr_data_path) unless Dir.exists?(@config.solr_data_path)
       @wsman_version = "0.1"
     end
 
@@ -170,24 +184,25 @@ module Wsman
       @config.web_root_dir
     end
 
-    def container_ip(site_name)
+    def container_ip(instance_name, instance_db_table)
       ip_id = nil
       ip = nil
+      return ip unless instance_name
       DB.open "sqlite3://#{@db_path}" do |db|
-        db.query "SELECT ip_id FROM sites WHERE name = ?", site_name do |rs|
+        db.query "SELECT ip_id FROM #{instance_db_table} WHERE name = ?", instance_name do |rs|
           rs.each do
             ip_id = rs.read(Int32)
           end
         end
         if ip_id.nil?
-          db.query "SELECT rowid, ip FROM ips WHERE rowid NOT IN (SELECT ip_id FROM sites) ORDER BY rowid LIMIT 1" do |rs|
+          db.query "SELECT rowid, ip FROM ips WHERE rowid NOT IN (SELECT ip_id FROM sites UNION SELECT ip_id FROM solr_instances) ORDER BY rowid LIMIT 1" do |rs|
             rs.each do
               ip_id = rs.read(Int32)
               ip = rs.read(String)
             end
           end
-          db.exec "INSERT OR IGNORE INTO sites (name) VALUES (?)", site_name
-          db.exec "UPDATE sites SET ip_id = ? WHERE name = ?", ip_id, site_name
+          db.exec "INSERT OR IGNORE INTO #{instance_db_table} (name) VALUES (?)", instance_name
+          db.exec "UPDATE #{instance_db_table} SET ip_id = ? WHERE name = ?", ip_id, instance_name
         else
           db.query "SELECT ip FROM ips WHERE rowid = ?", ip_id do |rs|
             rs.each do
@@ -257,6 +272,159 @@ module Wsman
         end
       end
       site_id
+    end
+
+    def get_solr_instance_id(version)
+      solr_instance = nil
+      DB.open "sqlite3://#{@db_path}" do |db|
+        db.query "SELECT rowid FROM solr_instances WHERE name = ? LIMIT 1", version do |rs|
+          rs.each do
+            solr_instance = rs.read(Int32)
+          end
+        end
+      end
+      solr_instance
+    end
+
+    def has_solr_container?(solr_version)
+      ! get_solr_instance_id(solr_version).nil?
+    end
+
+    def get_solr_cores_from_db(site_name)
+        solr_cores = Array(Wsman::Model::SolrCoreConfig).new
+        DB.open "sqlite3://#{@db_path}" do |db|
+          site_id = db_site_id(db, site_name)
+          return solr_cores unless site_id
+
+          db.query "SELECT sc.rowid,sc.solr_instance_id,sc.corename,sc.confname,si.name FROM solr_cores sc LEFT JOIN solr_instances si WHERE sc.site_id = ?", site_id do |rs|
+            rs.each do
+              core_id = rs.read(Int32)
+              solr_instance_id = rs.read(Int32)
+              corename = rs.read(String)
+              confname = rs.read(String)
+              solr_version = rs.read(String)
+              solr_cores << Wsman::Model::SolrCoreConfig.new(core_id, solr_instance_id, corename, confname.upcase, solr_version)
+            end
+          end
+        end
+        solr_cores
+    end
+
+    def add_solr_config_to_db(confname, site_name, solr_version)
+      corename = generate_solr_corename(confname, site_name)
+      DB.open "sqlite3://#{@db_path}" do |db|
+        site_id = db_site_id(db, site_name)
+        solr_instance_id = get_solr_instance_id(solr_version)
+        db.exec "INSERT OR IGNORE INTO solr_cores (corename, site_id, confname, solr_instance_id) "\
+                "VALUES (?, ?, ?, ?)", corename, site_id, confname, solr_instance_id
+      end
+      corename
+    end
+
+    def update_solr_core_site_id(site_name, corename)
+      DB.open "sqlite3://#{@db_path}" do |db|
+        site_id = db_site_id(db, site_name)
+        db.exec "UPDATE solr_cores SET site_id = ? WHERE corename = ?", site_id, corename
+      end
+    end
+
+    def solr_core_exists?(solr_cores, corename)
+      solr_core_names = solr_cores.map { |c| c.corename }
+      solr_core_names.includes? corename
+    end
+
+    def solr_version_name(solr_version)
+      solr_version_name=""
+      if solr_version
+        solr_version_name = solr_version.gsub(/[^0-9a-z]/i, '_')
+      end
+      solr_version_name
+    end
+
+    def create_or_update_solr_container(solr_version, dcompose)
+      if solr_dcompose_changed?(solr_version, dcompose)
+        cores_path = solr_cores_path_by_version(solr_version)
+        Dir.mkdir_p(cores_path)
+        File.chown(cores_path, uid: 8983, gid: 8983)
+        save_solr_dcompose(solr_version, dcompose)
+      end
+    end
+
+    def create_solr_core(solr_version, corename, solr_core_config_dir)
+      cores_path = solr_cores_path_by_version(solr_version)
+      core_conf_path = File.join(cores_path, corename)
+      Dir.mkdir_p(core_conf_path)
+      Wsman::Util.cmd("rm", ["-rf", File.join(core_conf_path, "conf")])
+      Wsman::Util.cmd("cp", ["-rp", solr_core_config_dir, core_conf_path])
+      File.write(File.join(core_conf_path, "core.properties"), "name=#{corename}")
+      Dir["#{cores_path}/**/*"].each do |path|
+        File.chown(path, uid: 8983, gid: 8983)
+      end
+    end
+
+    def solr_dcompose_changed?(solr_version, dcompose)
+      dc_file = solr_dcompose_file(solr_version)
+      if File.exists?(dc_file)
+        current_dc = File.read(dc_file)
+        dcompose != current_dc
+      else
+        true
+      end
+    end
+
+    def save_solr_dcompose(solr_version, dcompose)
+      File.write(solr_dcompose_file(solr_version), dcompose)
+    end
+
+    def solr_dcompose_file(solr_version)
+      File.join(solr_data_path, solr_version_name(solr_version), docker_compose_filename)
+    end
+
+    def solr_cores_path_by_version(solr_version)
+      File.join(solr_data_path, solr_version_name(solr_version), "cores")
+    end
+
+    def delete_solr_cores(solr_cores)
+      solr_cores.each do |solr_core|
+        cores_path = solr_cores_path_by_version(solr_core.solr_version)
+        core_path = File.join(cores_path, solr_core.corename)
+        Wsman::Util.remove_file(core_path)
+      end
+    end
+
+    def delete_solr_instance(solr_version)
+      solr_version_path = File.join(solr_data_path, solr_version_name(solr_version))
+      Wsman::Util.remove_file(solr_version_path)
+    end
+
+    def remove_solr_cores_from_db(site_name)
+      DB.open "sqlite3://#{@db_path}" do |db|
+        site_id = db_site_id(db, site_name)
+        db.exec "DELETE FROM solr_cores WHERE site_id = ?", site_id
+      end
+    end
+
+    def remove_solr_instance_from_db(solr_version)
+      DB.open "sqlite3://#{@db_path}" do |db|
+        solr_instance_id = get_solr_instance_id(solr_version)
+        db.exec "DELETE FROM solr_instances WHERE rowid = ?", solr_instance_id
+      end
+    end
+
+    def solr_instance_has_cores?(solr_instance_id)
+      instance_id = nil
+      DB.open "sqlite3://#{@db_path}" do |db|
+        db.query "SELECT rowid FROM solr_cores WHERE solr_instance_id = ?", solr_instance_id do |rs|
+          rs.each do
+            instance_id = rs.read(Int32)
+          end
+        end
+      end
+      !instance_id.nil?
+    end
+
+    def generate_solr_corename(confname, site_name)
+      "#{confname.upcase}_#{site_name.gsub('-', '_').gsub('.', '_')}"
     end
 
     def container_subnet
@@ -334,6 +502,14 @@ module Wsman
       @config.hosting_env_file
     end
 
+    def solr_image
+      @config.solr_image
+    end
+
+    def solr_data_path
+      @config.solr_data_path
+    end
+
     def save
       File.write(@config_path, @config.to_yaml)
       File.chmod(@config_path, 0o600)
@@ -372,6 +548,8 @@ module Wsman
         db.exec "create table sites (name text PRIMARY KEY, ip_id integer)"
         db.exec "create table ips (ip text)"
         db.exec "create table dbs (site_id integer, confname text, dbname text, username text, password text)"
+        db.exec "create table solr_instances (name text PRIMARY KEY, ip_id integer)"
+        db.exec "create table solr_cores (corename text PRIMARY KEY, site_id integer, confname text, solr_instance_id integer)"
 
         insert_ips = Array(String).new
         (1..254).each do |x|
