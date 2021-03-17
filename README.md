@@ -18,15 +18,25 @@ You might want to statically build it in some cases, for example when you're bui
 
 With podman:
 ```
+# Build container
 podman build --tag=wsman-build .
+# Install dependencies
 podman run --rm -it -v $PWD:/app -w /app wsman-build shards install
+# Build static binary
 podman run --rm -it -v $PWD:/app -w /app wsman-build crystal build --static --release -o wsman src/cli.cr
+# Run ameba - static code analysis
+podman run --rm -it -v $PWD:/app -w /app wsman-build bin/ameba
 ```  
 or with docker:  
 ```
+# Build container
 docker build --tag=wsman-build .
+# Install dependencies
 docker run -u $(id -u):$(id -g) --rm -it -v $PWD:/app -w /app wsman-build shards install
+# Build static binary
 docker run -u $(id -u):$(id -g) --rm -it -v $PWD:/app -w /app wsman-build crystal build --static --release -o wsman src/cli.cr
+# Run ameba - static code analysis
+docker run -u $(id -u):$(id -g) --rm -it -v $PWD:/app -w /app wsman-build bin/ameba
 ```
 
 ## Usage
