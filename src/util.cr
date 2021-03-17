@@ -1,7 +1,8 @@
+require "log"
+
 module Wsman
   class Util
     def self.cmd(cmd, args = [] of String)
-      log = Logger.new(STDOUT)
       stdout = IO::Memory.new
       stderr = IO::Memory.new
 
@@ -12,10 +13,10 @@ module Wsman
       status = Process.run(cmd, args: args, output: stdout, error: stderr)
 
       if status.success?
-        log.debug(stdout.to_s.strip)
+        Log.debug { stdout.to_s.strip }
         {status.exit_code, stdout.to_s.strip}
       else
-        log.error(stderr.to_s.strip)
+        Log.error { stderr.to_s.strip }
         {status.exit_code, stderr.to_s.strip}
       end
     end
@@ -25,12 +26,11 @@ module Wsman
     end
 
     def self.remove_file(path)
-      log = Logger.new(STDOUT)
       if File.exists?(path)
         FileUtils.rm_rf(path)
-        log.info("Removed #{path}.")
+        Log.info { "Removed #{path}." }
       else
-        log.info("Not removing #{path}, does not exist.")
+        Log.info { "Not removing #{path}, does not exist." }
       end
     end
 

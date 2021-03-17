@@ -25,8 +25,8 @@ podman run --rm -it -v $PWD:/app -w /app wsman-build crystal build --static --re
 or with docker:  
 ```
 docker build --tag=wsman-build .
-docker run --rm -it -v $PWD:/app -w /app wsman-build shards install
-docker run --rm -it -v $PWD:/app -w /app wsman-build crystal build --static --release -o wsman src/cli.cr
+docker run -u $(id -u):$(id -g) --rm -it -v $PWD:/app -w /app wsman-build shards install
+docker run -u $(id -u):$(id -g) --rm -it -v $PWD:/app -w /app wsman-build crystal build --static --release -o wsman src/cli.cr
 ```
 
 ## Usage

@@ -1,7 +1,5 @@
-require "llvm/lib_llvm"
-require "llvm/enums"
-
 require "clim"
+require "log"
 require "./handler"
 require "./util"
 
@@ -17,20 +15,19 @@ module Wsman
       sub "site" do
         desc "Site operations."
         usage "wsman site [command] [arguments]"
-        run do |opts, args|
+        run do |_opts, _args|
           puts "Site operations."
         end
         sub "setup_all" do
           desc "Generate site configurations."
           usage "setup_all"
           run do |_opts, _args|
-            log = Logger.new(STDOUT)
             handler = Wsman::Handler.new
             handler.prepare_env
-            log.info("Processing sites: " + handler.site_manager.names.join(", "))
+            Log.info { "Processing sites: " + handler.site_manager.names.join(", ") }
             sites = handler.site_manager.sites
             if sites.empty?
-              log.info("No sites found. Exiting...")
+              Log.info { "No sites found. Exiting..." }
               exit 0
             end
             sites.each do |site|
@@ -44,16 +41,12 @@ module Wsman
           desc "Generate site configurations for the given site."
           usage "setup [options] <sitename>"
           option "--skip-solr", type: Bool, desc: "Skip Solr core install, even if it's configured.", default: false
+          argument "site-name", desc: "Site name to process", type: String, required: true
           run do |opts, args|
-            log = Logger.new(STDOUT)
-            if args.size == 0
-              log.info("Please list sites to process.")
-              Process.exit(0)
-            end
             handler = Wsman::Handler.new
             handler.prepare_env
             handler.site_manager.sites.each do |site|
-              if args.includes? site.site_name
+              if args.site_name == site.site_name
                 site.skip_solr = opts.skip_solr
                 handler.process_site(site)
               end
@@ -65,15 +58,11 @@ module Wsman
         sub "setup_solr" do
           desc "Generate solr configurations for the given site."
           usage "setup_solr <sitename>"
-          run do |opts, args|
-            log = Logger.new(STDOUT)
-            if args.size == 0
-              log.info("Please list sites to process.")
-              Process.exit(0)
-            end
+          argument "site-name", desc: "Site name to process", type: String, required: true
+          run do |_opts, args|
             handler = Wsman::Handler.new
             handler.site_manager.sites.each do |site|
-              if args.includes? site.site_name
+              if args.site_name == site.site_name
                 handler.setup_solr(site)
               end
             end
@@ -84,7 +73,7 @@ module Wsman
       sub "ci" do
         desc "CI operations."
         usage "wsman ci [command] [arguments]"
-        run do |opts, args|
+        run do |_opts, _args|
           puts "CI operations."
         end
         sub "zipinstall" do
@@ -93,24 +82,23 @@ module Wsman
           option "-f", "--force", type: Bool, desc: "Overwrite target directory.", default: false
           option "-s SITE", "--site=SITE", type: String, required: true, desc: "Main hostname of the site. This is also used as the directory name."
           option "-z ZIP", "--zip ZIP", type: String, required: true, desc: "Path to the archive."
-          run do |opts, args|
-            log = Logger.new(STDOUT)
+          run do |opts, _args|
             handler = Wsman::Handler.new
             unless File.exists?(opts.zip)
-              log.error("Provided archive #{opts.zip} doesn't exist, aborting.")
+              Log.error { "Provided archive #{opts.zip} doesn't exist, aborting." }
               exit 1
             end
             if handler.site_manager.site_exists?(opts.site)
               if opts.force
-                log.info("Site #{opts.site} already exists, forcing install on user request...")
+                Log.info { "Site #{opts.site} already exists, forcing install on user request..." }
               else
-                log.error("Site #{opts.site} already exists, aborting.")
+                Log.error { "Site #{opts.site} already exists, aborting." }
                 exit 1
               end
             else
-              log.info("Site #{opts.site} doesn't exist yet, moving on...")
+              Log.info { "Site #{opts.site} doesn't exist yet, moving on..." }
             end
-            log.info("Installing artifact #{opts.zip} as #{opts.site}...")
+            Log.info { "Installing artifact #{opts.zip} as #{opts.site}..." }
             handler.site_manager.create_site_root(opts.site)
             site_root = handler.site_manager.site_root(opts.site)
             site_docroot = handler.site_manager.site_docroot(opts.site)
@@ -128,9 +116,9 @@ module Wsman
                   File.chmod(path, 0o755)
                 end
               end
-              log.info("  Installation successful.")
+              Log.info { "  Installation successful." }
             else
-              log.error("  Installation failed.")
+              Log.error { "  Installation failed." }
             end
           end
         end
@@ -138,7 +126,7 @@ module Wsman
           desc "Cleans up a site from the server."
           usage "cleanup --site <sitename>"
           option "-s SITE", "--site=SITE", type: String, required: true, desc: "Main hostname of the site. This is also used as the directory name."
-          run do |opts, args|
+          run do |opts, _args|
             handler = Wsman::Handler.new
             handler.cleanup(opts.site)
           end
@@ -147,7 +135,7 @@ module Wsman
           desc "Cleans up a site's solr"
           usage "cleanup_solr --site <sitename>"
           option "-s SITE", "--site=SITE", type: String, required: true, desc: "Main hostname of the site. This is also used as the directory name."
-          run do |opts, args|
+          run do |opts, _args|
             handler = Wsman::Handler.new
             handler.cleanup_solr(opts.site)
           end
@@ -156,7 +144,7 @@ module Wsman
         sub "list_sites" do
           desc "List the stored sites."
           usage "list_sites"
-          run do |opts, args|
+          run do |_opts, _args|
             handler = Wsman::Handler.new
             puts handler.list_sites
           end

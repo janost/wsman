@@ -6,142 +6,55 @@ require "./model/solr_core_config"
 
 module Wsman
   class Config
-    DEFAULT_NGINX_CONF_DIR = "/etc/nginx"
-    DEFAULT_WEB_ROOT_DIR = "/srv/www"
-    DEFAULT_CONTAINER_SUBNET = "172.28."
-    DEFAULT_CONTAINER_NETWORK = "web"
-    DEFAULT_CONTAINER_IMAGE = "cheppers/php"
-    DEFAULT_CONTAINER_HTDOCS = "/htdocs"
-    DEFAULT_DOCKER_COMPOSE_FILENAME = "docker-compose.yml"
-    DEFAULT_WEB_USER = "web"
-    DEFAULT_WEB_GROUP = "web"
-    DEFAULT_PHPFPM_PORT = 9000
-    DEFAULT_TEMPLATE_SERVICE_NAME = "wsd"
-    DEFAULT_AWSLOGS_PREFIX = "simple-webhost"
-    DEFAULT_AWSLOGS_CONFIG_PATH = "/var/awslogs/etc/config"
-    DEFAULT_MYSQL_PWD_CMD = "/opt/get-db-password.sh"
-    DEFAULT_SYSTEMD_SERVICE_DIR = "/etc/systemd/system"
-    DEFAULT_DOCKER_ENVIRONMENT_DIR = "/etc/wsman-sites"
-    DEFAULT_DOCKER_ENVIRONMENT_PREFIX = "wsd-"
-    DEFAULT_HOSTING_ENV_FILE = "/etc/wsman-sites/hosting-env"
-    DEFAULT_STACK_NAME_CMD = "/opt/stack-name.sh"
-    DEFAULT_SOLR_IMAGE = "solr"
-    DEFAULT_SOLR_DATA_PATH = "/data/solr_instances"
+    include YAML::Serializable
 
-    YAML.mapping(
-      nginx_conf_dir: {
-        type:    String,
-        default: DEFAULT_NGINX_CONF_DIR,
-      },
-      fixtures_dir: {
-        type:    String,
-        default: "#{ENV["HOME"]}/.config/wsman/fixtures",
-      },
-      web_root_dir: {
-        type:    String,
-        default: DEFAULT_WEB_ROOT_DIR,
-      },
-      docker_compose_filename: {
-        type:    String,
-        default: DEFAULT_DOCKER_COMPOSE_FILENAME,
-      },
-      container_image: {
-        type:    String,
-        default: DEFAULT_CONTAINER_IMAGE,
-      },
-      container_htdocs: {
-        type:    String,
-        default: DEFAULT_CONTAINER_HTDOCS,
-      },
-      container_subnet: {
-        type:    String,
-        default: DEFAULT_CONTAINER_SUBNET,
-      },
-      container_network: {
-        type:    String,
-        default: DEFAULT_CONTAINER_NETWORK,
-      },
-      web_user: {
-        type:    String,
-        default: DEFAULT_WEB_USER,
-      },
-      web_group: {
-        type:    String,
-        default: DEFAULT_WEB_GROUP,
-      },
-      phpfpm_port: {
-        type:    Int32,
-        default: DEFAULT_PHPFPM_PORT,
-      },
-      template_service_name: {
-        type:    String,
-        default: DEFAULT_TEMPLATE_SERVICE_NAME,
-      },
-      awslogs_prefix: {
-        type:    String,
-        default: DEFAULT_AWSLOGS_PREFIX,
-      },
-      awslogs_config_path: {
-        type:    String,
-        default: DEFAULT_AWSLOGS_CONFIG_PATH,
-      },
-      mysql_pwd_cmd: {
-        type:    String,
-        default: DEFAULT_MYSQL_PWD_CMD,
-      },
-      systemd_service_dir: {
-        type:    String,
-        default: DEFAULT_SYSTEMD_SERVICE_DIR,
-      },
-      docker_environment_dir: {
-        type:    String,
-        default: DEFAULT_DOCKER_ENVIRONMENT_DIR,
-      },
-      docker_environment_prefix: {
-        type:    String,
-        default: DEFAULT_DOCKER_ENVIRONMENT_PREFIX,
-      },
-      hosting_env_file: {
-        type:    String,
-        default: DEFAULT_HOSTING_ENV_FILE,
-      },
-      stack_name_cmd: {
-        type:    String,
-        default: DEFAULT_STACK_NAME_CMD,
-      },
-      solr_image: {
-        type:    String,
-        default: DEFAULT_SOLR_IMAGE,
-      },
-      solr_data_path: {
-        type:    String,
-        default: DEFAULT_SOLR_DATA_PATH,
-      }
-    )
+    @[YAML::Field]
+    property nginx_conf_dir : String = "/etc/nginx"
+    @[YAML::Field]
+    property fixtures_dir : String = "#{ENV["HOME"]}/.config/wsman/fixtures"
+    @[YAML::Field]
+    property web_root_dir : String = "/srv/www"
+    @[YAML::Field]
+    property docker_compose_filename : String = "docker-compose.yml"
+    @[YAML::Field]
+    property container_image : String = "cheppers/php"
+    @[YAML::Field]
+    property container_htdocs : String = "/htdocs"
+    @[YAML::Field]
+    property container_subnet : String = "172.28."
+    @[YAML::Field]
+    property container_network : String = "web"
+    @[YAML::Field]
+    property web_user : String = "web"
+    @[YAML::Field]
+    property web_group : String = "web"
+    @[YAML::Field]
+    property phpfpm_port : Int32 = 9000
+    @[YAML::Field]
+    property template_service_name : String = "wsd"
+    @[YAML::Field]
+    property awslogs_prefix : String = "simple-webhost"
+    @[YAML::Field]
+    property awslogs_config_path : String = "/var/awslogs/etc/config"
+    @[YAML::Field]
+    property mysql_pwd_cmd : String = "/opt/get-db-password.sh"
+    @[YAML::Field]
+    property systemd_service_dir : String = "/etc/systemd/system"
+    @[YAML::Field]
+    property docker_environment_dir : String = "/etc/wsman-sites"
+    @[YAML::Field]
+    property docker_environment_prefix : String = "wsd-"
+    @[YAML::Field]
+    property hosting_env_file : String = "/etc/wsman-sites/hosting-env"
+    @[YAML::Field]
+    property stack_name_cmd : String = "/opt/stack-name.sh"
+    @[YAML::Field]
+    property solr_image : String = "solr"
+    @[YAML::Field]
+    property solr_data_path : String = "/data/solr_instances"
 
     def initialize(config_base)
-      @nginx_conf_dir = DEFAULT_NGINX_CONF_DIR
       @fixtures_dir = File.join(config_base, "fixtures")
-      @web_root_dir = DEFAULT_WEB_ROOT_DIR
-      @container_subnet = DEFAULT_CONTAINER_SUBNET
-      @container_network = DEFAULT_CONTAINER_NETWORK
-      @container_image = DEFAULT_CONTAINER_IMAGE
-      @container_htdocs = DEFAULT_CONTAINER_HTDOCS
-      @docker_compose_filename = DEFAULT_DOCKER_COMPOSE_FILENAME
-      @web_user = DEFAULT_WEB_USER
-      @web_group = DEFAULT_WEB_GROUP
-      @phpfpm_port = DEFAULT_PHPFPM_PORT
-      @template_service_name = DEFAULT_TEMPLATE_SERVICE_NAME
-      @awslogs_prefix = DEFAULT_AWSLOGS_PREFIX
-      @awslogs_config_path = DEFAULT_AWSLOGS_CONFIG_PATH
-      @mysql_pwd_cmd = DEFAULT_MYSQL_PWD_CMD
-      @systemd_service_dir = DEFAULT_SYSTEMD_SERVICE_DIR
-      @docker_environment_dir = DEFAULT_DOCKER_ENVIRONMENT_DIR
-      @docker_environment_prefix = DEFAULT_DOCKER_ENVIRONMENT_PREFIX
-      @hosting_env_file = DEFAULT_HOSTING_ENV_FILE
-      @stack_name_cmd = DEFAULT_STACK_NAME_CMD
-      @solr_image = DEFAULT_SOLR_IMAGE
-      @solr_data_path = DEFAULT_SOLR_DATA_PATH
     end
   end
 
