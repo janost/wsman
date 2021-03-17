@@ -10,6 +10,8 @@ module Wsman
       DEFAULT_DATABASES = ["main"]
       DEFAULT_HOSTS = Hash(String, String).new
       DEFAULT_SITE_ROOT = "docroot"
+      DEFAULT_SOLR_VERSION = nil
+      DEFAULT_SOLR_CORES = Array(String).new
 
       YAML.mapping(
         php_version: {
@@ -44,6 +46,20 @@ module Wsman
           nilable: false,
           default: DEFAULT_SITE_ROOT,
           setter: false,
+        },
+        solr_version: {
+          type:    String,
+          key:     "solrVersion",
+          nilable: true,
+          default: DEFAULT_SOLR_VERSION,
+          setter:  false,
+        },
+        solr_cores: {
+          type:    Array(String),
+          key:     "solrCores",
+          nilable: false,
+          default: DEFAULT_SOLR_CORES,
+          setter:  false,
         }
       )
 
@@ -53,6 +69,8 @@ module Wsman
         @databases = DEFAULT_DATABASES
         @hosts = DEFAULT_HOSTS
         @site_root = DEFAULT_SITE_ROOT
+        @solr_version = DEFAULT_SOLR_VERSION
+        @solr_cores = DEFAULT_SOLR_CORES
       end
 
       def full_hosts(base_domain)

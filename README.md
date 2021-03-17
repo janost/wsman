@@ -19,20 +19,81 @@ You might want to statically build it in some cases, for example when you're bui
 With podman:
 ```
 podman build --tag=wsman-build .
+podman run --rm -it -v $PWD:/app -w /app wsman-build shards install
 podman run --rm -it -v $PWD:/app -w /app wsman-build crystal build --static --release -o wsman src/cli.cr
 ```  
 or with docker:  
 ```
 docker build --tag=wsman-build .
+docker run --rm -it -v $PWD:/app -w /app wsman-build shards install
 docker run --rm -it -v $PWD:/app -w /app wsman-build crystal build --static --release -o wsman src/cli.cr
 ```
 
 ## Usage
 
-Currently there is a single `generate` command supported by the program.
 ```
-wsman generate
+wsman [tool] [command] [arguments]
 ```
+
+### Tools
+
+#### site
+
+```
+wsman site setup \<sitename\>
+```
+Generate site configurations for the given site.
+
+##### options
+
+|Name|Definition|
+|---|---|
+|--skip-solr|`Optional`- Skip Solr core install, even if it's configured. (default:false)|
+
+```
+wsman site setup_all
+```
+Generate site configurations.
+
+```
+wsman site setup_solr \<sitename\>
+```
+Generate site's solr configurations for the given site.
+
+#### ci
+
+```
+wsman ci zipinstall -s \<sitename\> -z \<archive\>
+```
+
+Installs a zipped site artifact to the webroot.
+
+##### options
+
+|Name|Definition|
+|---|---|
+|-f, --force|`Optional`- Overwrite target directory. (default:false)|
+|-s SITE, --site=SITE|`Required` - Main hostname of the site. This is also used as the directory name.|
+|-z ZIP, --zip ZIP|`Required` - Path to the archive.|
+
+```
+wsman ci cleanup -s \<sitename\>
+```
+
+Cleans up a site from the server.
+
+```
+wsman ci cleanup_solr -s \<sitename\>
+```
+
+Cleans up a site's solr core from the server.
+
+##### options
+
+|Name|Definition|
+|---|---|
+|-s SITE, --site=SITE |`Required`- Main hostname of the site. This is also used as the directory name.|
+
 
 ## What does it do?
 

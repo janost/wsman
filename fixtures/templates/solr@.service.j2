@@ -1,15 +1,11 @@
 [Unit]
-Description=Docker-compose based wsman site service %i
+Description=Docker-compose based solr service %i
 Requires=docker.service
 After=docker.service
 
 [Service]
-User=web
-Group=web
 Restart=always
-EnvironmentFile=-/etc/wsman-sites/hosting-env
-EnvironmentFile=-/etc/wsman-sites/wsd-%i
-WorkingDirectory=/srv/www/%i
+WorkingDirectory={{ solr_data_path }}/%i
 
 # Remove old containers, images and volumes
 ExecStartPre=/usr/local/bin/docker-compose down -v
