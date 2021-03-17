@@ -15,7 +15,7 @@ module Wsman
       @[YAML::Field(key: "siteRoot")]
       property site_root : String = "docroot"
       @[YAML::Field(key: "solrVersion")]
-      property solr_version : String = "8.8.1"
+      property solr_version : String = "7.7.3"
       @[YAML::Field(key: "solrCores")]
       property solr_cores : Array(String) = Array(String).new
 
