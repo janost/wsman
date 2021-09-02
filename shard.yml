@@ -8,15 +8,15 @@ targets:
   wsman:
     main: src/cli.cr
 
-crystal: 0.36.1
+crystal: 1.1.1
 
 dependencies:
   clim:
     github: at-grandpa/clim
-    version: 0.16.0
+    version: 0.17.1
   crinja:
     github: straight-shoota/crinja
-    version: 0.7.0
+    version: 0.8.0
   sqlite3:
     github: crystal-lang/crystal-sqlite3
     version: 0.18.0

@@ -1,4 +1,4 @@
-FROM crystallang/crystal:0.36.1-alpine
+FROM crystallang/crystal:1.1.1-alpine
 
 RUN apk add --update --no-cache --force-overwrite --force \
     sqlite-static \

@@ -2,19 +2,19 @@ version: 2.0
 shards:
   ameba:
     git: https://github.com/crystal-ameba/ameba.git
-    version: 0.14.1
+    version: 0.14.3
 
   clim:
     git: https://github.com/at-grandpa/clim.git
-    version: 0.16.0
+    version: 0.17.1
 
   crinja:
     git: https://github.com/straight-shoota/crinja.git
-    version: 0.7.0
+    version: 0.8.0
 
   db:
     git: https://github.com/crystal-lang/crystal-db.git
-    version: 0.10.0
+    version: 0.10.1
 
   sqlite3:
     git: https://github.com/crystal-lang/crystal-sqlite3.git
