@@ -83,8 +83,11 @@ server {
         fastcgi_buffer_size 32k;
     }
 
-    location ~ ^/sites/.*/files/styles/ {
-        try_files $uri @rewrite;
+    location ~ ^/sites/.*/files/ {
+        root {{ web_root_dir }}/{{ site_name }}/data/htdocs/docroot/;
+        location ~ ^/sites/.*/files/styles/ {
+            try_files $uri @rewrite;
+        }
     }
 
     location ~ ^(/[a-z\-]+)?/system/files/ {
@@ -174,8 +177,11 @@ server {
         fastcgi_buffer_size 32k;
     }
 
-    location ~ ^/sites/.*/files/styles/ {
-        try_files $uri @rewrite;
+    location ~ ^/sites/.*/files/ {
+        root {{ web_root_dir }}/{{ site_name }}/data/htdocs/docroot/;
+        location ~ ^/sites/.*/files/styles/ {
+            try_files $uri @rewrite;
+        }
     }
 
     location ~ ^(/[a-z\-]+)?/system/files/ {
